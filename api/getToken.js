@@ -17,8 +17,7 @@ export default async function handler(req, res) {
     const response = await fetch("https://api.zendry.com.br/auth/generate_token", {
       method: "POST",
       headers: {
-        "Authorization": "Basic OWVhYjc2MTAtZTgzZC00NDUyLTg5M2MtMzFhYWNjNzYzNDI3OmFhYTIzZmFhLThkOWItNGU1OC04MmVhLTE0NDIyMzA2MzQyZQ==",
-        "Content-Type": "application/json"
+        
       },
       body: JSON.stringify({ grant_type: "client_credentials" })
     });
