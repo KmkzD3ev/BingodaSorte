@@ -18,6 +18,7 @@ const RecargaPix = () => {
   const [loading, setLoading] = useState(true); 
   const [cpfExiste, setCpfExiste] = useState(false);
   const [loadingQr, setLoadingQr] = useState(false); // 🔹 Estado para mostrar o diálogo de carregamento
+  const [cpfUsuario, setCpfUsuario] = useState(""); // 🔥 Armazena o CPF do usuário
 
   useEffect(() => {
     const verificarCpf = async () => {
@@ -28,6 +29,8 @@ const RecargaPix = () => {
         const userSnap = await getDoc(userRef);
 
         if (userSnap.exists() && userSnap.data().cpf) {
+          console.log("✅ CPF encontrado no Firestore:", userSnap.data().cpf);
+          setCpfUsuario(userSnap.data().cpf); // 🔥 Salva o CPF no state
           setCpfExiste(true);
         }
       } catch (error) {
@@ -56,7 +59,7 @@ const RecargaPix = () => {
 
       const userRef = doc(db, "usuarios", user.uid);
       await updateDoc(userRef, { cpf });
-
+      setCpfUsuario(cpf); // 🔥 Atualiza o CPF diretamente no state
       setCpfExiste(true);
       setStatus("✅ CPF atualizado com sucesso.");
     } catch (error) {
@@ -112,6 +115,13 @@ const RecargaPix = () => {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
       };
+
+      console.log("🔑 Token de autenticação:", token); // Loga o Token antes do envio
+
+console.log("📌 Dados enviados para gerar QR Code:", JSON.stringify(requestData, null, 2)); // Loga os dados do corpo da requisição
+
+console.log("📌 Headers da requisição:", requestHeaders); // Loga os headers antes do envio
+
 
       const response = await axios.post("https://backend-proxy-6x3n.onrender.com/proxy/qrcode", requestData, { headers: requestHeaders });
 

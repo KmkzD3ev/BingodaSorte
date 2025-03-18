@@ -3,6 +3,11 @@ import { auth, db } from "../services/firebaseconection";
 import { doc, getDoc } from "firebase/firestore";
 import NavBar from "../Components/NavBar ";
 
+// https://backend-proxy-6x3n.onrender.com/proxy/pagamento
+/***
+ * URL PARA SOLICITAR PAGMENTO
+ * 
+ */
 const MeusPremios = () => {
   const [premios, setPremios] = useState([]);
   const [loading, setLoading] = useState(true);

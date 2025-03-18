@@ -16,6 +16,8 @@ const Sorteio = () => {
   const { numerosSorteados, setNumerosSorteados, sorteando, setSorteando, numeroAtual, setNumeroAtual } =
     useContext(BingoContext);
     const { uid } = useContext(UserContext);
+
+  
    
 
   const [cartelas, setCartelas] = useState([]);
@@ -101,6 +103,7 @@ const Sorteio = () => {
 
     recuperarCartelas();
   }, []);
+
 
   //////////////////////////////////////////////////////////////////////
 
@@ -442,7 +445,12 @@ const sortearNumero = async () => {
         }
 
         // 🔥 Recupera os valores de prêmio salvos no localStorage
-        const sorteioData = JSON.parse(localStorage.getItem('dadosSorteio') || '{}');
+       // const sorteioData = JSON.parse(localStorage.getItem('dadosSorteio') || '{}');
+       const sorteioData = JSON.parse(localStorage.getItem('sorteioData') || '{}');
+
+        
+  
+          console.log("📌 Valores do Sorteio Recuperados:", sorteioData);
 
         for (const vencedor of vencedores) {
             if (!vencedor.userId) {
@@ -452,27 +460,46 @@ const sortearNumero = async () => {
 
             let valorPremio = 0;
 
-            // 🔥 Define o valor do prêmio com base no tipo de vitória
+            // 🔥 Agora pegamos as chaves corretas
             if (vencedor.tipo === "Quadra") {
-                valorPremio = sorteioData.primeiroPremio || 0;
-            } else if (vencedor.tipo === "Quina") {
-                valorPremio = sorteioData.segundoPremio || 0;
-            } else if (vencedor.tipo === "Cartela Cheia") {
-                valorPremio = sorteioData.terceiroPremio || 0;
-            }
+              valorPremio = sorteioData.primeiro || 0;  // ✅ CORRETO
+          } else if (vencedor.tipo === "Quina") {
+              valorPremio = sorteioData.segundo || 0;   // ✅ CORRETO
+          } else if (vencedor.tipo === "Cartela Cheia") {
+              valorPremio = sorteioData.terceiro || 0;  // ✅ CORRETO
+          }
+
 
             // 🔥 Referência ao documento do usuário no Firestore
             const userRef = doc(db, "usuarios", vencedor.userId);
 
-            // 🔍 Loga os dados antes de salvar
-            console.log("📌 Salvando vitória para usuário:", {
-                userId: vencedor.userId,
-                nome: vencedor.userName,
-                tipo: vencedor.tipo,
-                cartelaId: vencedor.cartelaId,
-                valorPremio: valorPremio,
-                timestamp: new Date().toISOString(),
-            });
+           // 🔥 Obtém os prêmios atuais para evitar duplicação
+           const userSnap = await getDoc(userRef);
+           let premiosAtuais = [];
+           if (userSnap.exists()) {
+               premiosAtuais = userSnap.data().premios || [];
+           }
+
+           // 🔥 Verifica se o prêmio já foi concedido ao usuário
+           const jaGanhou = premiosAtuais.some(premio =>
+               premio.tipo === vencedor.tipo &&
+               premio.cartelaId === vencedor.cartelaId
+           );
+
+           if (jaGanhou) {
+               console.warn(`⚠️ Usuário ${vencedor.userName} já recebeu o prêmio ${vencedor.tipo}. Pulando...`);
+               continue;
+           }
+
+           // 🔍 Loga os dados antes de salvar
+           console.log("📌 Salvando vitória para usuário:", {
+               userId: vencedor.userId,
+               nome: vencedor.userName,
+               tipo: vencedor.tipo,
+               cartelaId: vencedor.cartelaId,
+               valorPremio: valorPremio,
+               timestamp: new Date().toISOString(),
+           });
 
             // 🔥 Tenta atualizar o Firestore
             await updateDoc(userRef, {
