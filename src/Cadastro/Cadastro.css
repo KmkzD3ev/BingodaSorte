@@ -1,0 +1,130 @@
+.Geral {
+    position: absolute; /* 🔹 Garante que a div cubra tudo */
+    top: 0;
+    left: 0;
+    width: 100vw; /* 🔹 Ocupa toda a largura da tela */
+    height: 200vh; /* 🔹 Ocupa toda a altura da tela */
+    background: #16c840; /* 🔹 Cor verde apenas nessa página */
+    /* 🔹 Centraliza horizontalmente */
+}
+
+.bonus-image {
+    max-width: 50%; /* Reduzi o tamanho da imagem */
+    height: auto; /* Mantém a proporção correta */
+    border-radius: 10px; /* Bordas arredondadas para um visual mais clean */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Sombra leve para destacar a imagem */
+    margin-bottom: 20px; /* Garante espaçamento entre a imagem e o formulário */
+     display: block;  /* Garante que a imagem ocupe uma linha inteira */
+    margin: 0 auto;
+    margin-top: 0;
+}
+
+
+/* Container principal */
+.container {
+    text-align: center;
+    background-color: #FFFFFF;
+    padding: 30px;
+    margin: 10px auto;
+    border-radius: 10px; 
+    max-width: 600px;
+    min-height: 100vh;
+}
+
+/* Título */
+.title {
+    font-size: 28px;
+    font-weight: bold;
+    color: #333;
+}
+
+/* Formulário */
+.form-container {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    max-width: 390px;
+    margin: 20px auto;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Texto abaixo do título */
+.form-container h2 {
+    font-size: 18px;
+    margin-bottom: 5px;
+    color: #444;
+}
+
+.form-container p {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 15px;
+}
+
+/* Campos de entrada */
+.input-group {
+    margin-bottom: 15px;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    outline: none;
+}
+
+.input-group input:focus {
+    border-color: #0096FF;
+}
+
+/* Botão de Registro */
+.register-btn {
+    width: 100%;
+    background-color: #0096FF;
+    color: white;
+    border: none;
+    padding: 12px;
+    font-size: 16px;
+    font-weight: bold;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.register-btn:hover {
+    background-color: #007ACC;
+}
+
+/* Link de Recuperar Acesso */
+.recover-access {
+    display: block;
+    margin-top: 10px;
+    color: #0096FF;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+/* Seção das imagens 18+ e PIX */
+.images-section {
+    display: flex;
+    justify-content: center; /* 🔹 Centraliza horizontalmente */
+    align-items: center; /* 🔹 Mantém alinhadas verticalmente */
+    gap: 30px; /* 🔹 Aumenta o espaço entre as imagens */
+    margin-top: 30px; /* 🔹 Dá mais espaço entre o formulário e as imagens */
+}
+
+/* Estilização das imagens */
+.footer-image {
+    width: 160px; /* 🔹 Aumenta o tamanho das imagens para o mesmo valor */
+    height: 160px; /* 🔹 Mantém ambas do mesmo tamanho */
+    object-fit: contain; /* 🔹 Garante que a imagem não fique distorcida */
+    border-radius: 10px; /* 🔹 Bordas arredondadas para um visual mais clean */
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3); /* 🔹 Sombra mais forte para destacar as imagens */
+}
+
+
+.recover-access:hover {
+    text-decoration: underline;
+}

@@ -1,0 +1,356 @@
+
+/* Estilos para mobile (telas menores que 768px) */
+@media (max-width:  768px) {
+    /* Garante que os componentes fiquem organizados corretamente */
+    .home-container {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      width: 100%;
+      background-color: cornflowerblue;
+     
+    }
+  
+    /* Adiciona espaçamento entre os componentes */
+    .row {
+      width: 100%;
+      margin-bottom: 20px; /* Ajusta o espaçamento entre os blocos */
+    }
+   
+  
+    .info-container {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      flex-wrap: nowrap; /* 🔥 Impede que os itens fiquem um abaixo do outro */
+      background-color: #0096FF ;
+      padding: 20px;
+      border-radius: 5px;
+      color: rgb(0, 0, 0);
+      font-weight: bold;
+      margin-top: 10px;
+    }
+    
+  
+    /* Ajuste no alinhamento dos componentes */
+    .sorteio-painel, .cartela-compra {
+      width: 95%;
+      max-width: 1200px; /* Define um limite de largura */
+      padding: 10px;
+    
+    }
+    .sorteio-painel{
+      height: 90%;
+    }
+    
+    /* Ajusta a posição do CartelaCompra para ficar corretamente abaixo do SorteioPainel */
+    .cartela-compra {
+      order: 2; /* Mantém a posição correta se for flex */
+      margin-top: 600px; /* Dá um espaçamento entre os elementos */
+      margin-left: -120px;
+      background-color: rgb(214, 213, 214);
+     
+    }
+
+
+    .botao-comprar {
+      display: flex;
+      align-items: center; /* Centraliza verticalmente */
+      justify-content: center; /* Centraliza horizontalmente */
+      height: 40px; /* Ajuste conforme necessário */
+      padding: 10px 20px; /* Ajuste conforme necessário */
+      text-align: center; /* Garante alinhamento do texto */
+      margin-left: 250px;
+      top: 55px;
+  }
+  
+  
+    /* Garante que o PainelInfo fique sempre abaixo do CartelaCompra */
+  
+
+    .painel-conteudo{
+      margin-top: -130px;
+      right: 20px;
+
+    
+    }
+
+
+    .premios {
+      display: flex;
+      flex-direction: column; /* 🔹 Um prêmio abaixo do outro */
+      gap: 10px;
+      max-width: 100%;
+  }
+
+    .seletor-manual{
+margin-left: 30px;
+
+    }
+
+    .icones {
+      display: flex;
+      gap: 15px;
+      display: none;
+  }
+
+  @media (max-width: 400px) {
+
+
+    .home-container {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      width: 50%;
+      background-color: cornflowerblue;
+
+    
+}
+
+.relogio  {
+  width: 100%;
+
+}
+
+.numero {
+  font-size: 25px; /* 🔹 Ajusta para telas menores */
+  padding: 5px 7px;
+}
+
+.premios {
+  display: flex;
+  flex-direction: column; /* 🔹 Um prêmio abaixo do outro */
+  gap: 10px;
+  max-width: 40%;
+  margin-right: 180px;
+}
+
+.premio-item {
+  font-size: 18px;
+  padding: 12px;
+  width: 310px;
+ 
+}
+
+.botao-comprar {
+
+  margin-left: 210px;
+ 
+ 
+}
+
+.cartela-compra{
+left: 95%;
+
+}
+
+
+
+}
+
+@media (max-width: 391px) {
+
+
+  .home-container {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    width: 50%;
+    background-color: cornflowerblue;
+
+  
+}
+
+.relogio  {
+width: 100%;
+
+}
+
+.numero {
+font-size: 25px; /* 🔹 Ajusta para telas menores */
+padding: 5px 7px;
+}
+
+.premios {
+display: flex;
+flex-direction: column; /* 🔹 Um prêmio abaixo do outro */
+gap: 10px;
+max-width: 40%;
+margin-right: 180px;
+}
+
+.premio-item {
+font-size: 18px;
+padding: 12px;
+width: 310px;
+
+}
+
+.botao-comprar {
+
+margin-left: 210px;
+
+
+}
+
+.cartela-compra{
+left: 95%;
+top: 22%;
+
+}
+
+
+
+}
+
+
+@media (max-width: 415px) {
+  .cartela-compra{
+    margin-top: 175%;
+    margin-left: -120px;
+  }
+
+  .painel-container {
+
+  
+    height: 680px;
+    
+   
+  }
+
+  .relogio {
+
+  
+    height: 240px;
+    width: 100%;
+    
+   
+  }
+
+  .numero {
+    height: 100px;
+    font-size: 65px;
+    padding: 0px 2px;
+    width: 60%;
+   
+}
+
+
+}
+
+@media (max-width: 431px) {
+  .cartela-compra{
+    margin-top: 153%;
+  
+    margin-right: -45px;
+  }
+
+  .painel-container {
+
+  
+    height: 680px;
+    
+   
+  }
+
+  .relogio {
+
+  
+    height: 240px;
+    width: 100%;
+    
+   
+  }
+
+  .numero {
+    height: 100px;
+    font-size: 65px;
+    padding: 0px 2px;
+    width: 60%;
+   
+}
+
+
+}
+
+
+
+
+@media (max-width: 391px) {
+  .cartela-compra{
+    margin-left: -170px;
+  }
+
+
+
+
+}
+
+
+
+
+
+
+@media (max-width: 376px) {
+
+  .painel-container {
+
+  
+    height: 680px;
+    
+   
+  }
+
+  .relogio {
+
+  
+    height: 240px;
+    width: 100%;
+    
+   
+  }
+
+  .numero {
+    height: 100px;
+    font-size: 65px;
+    padding: 0px 2px;
+    width: 60%;
+   
+}
+
+  .cartela-compra{
+    margin-left: -160px;
+    margin-top: 168%;
+  }
+
+  .seletor-manual{
+    margin-left: -5px;
+
+  }
+
+  .botao-comprar{
+    margin-left: 185px;
+  }
+    
+    
+  }
+
+  
+@media (max-width: 361px) {
+
+
+  .numero {
+    height: 100px;
+    font-size: 65px;
+    padding: 0px 0px;
+    width: 60%;
+   
+}
+
+ 
+    
+    
+  }
+
+}
+  

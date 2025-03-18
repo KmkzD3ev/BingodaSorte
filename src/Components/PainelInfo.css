@@ -1,0 +1,105 @@
+/* Painel Superior */
+.painel-info {
+    width: 100%;
+    max-width: 550px;
+    height: 50px;
+    background: linear-gradient(to bottom, #B0B0B0, #808080);
+    border-radius: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    color: black;
+    font-size: 18px;
+    font-weight: bold;
+    box-shadow: inset 2px 2px 5px rgba(255, 255, 255, 0.5), inset -2px -2px 5px rgba(0, 0, 0, 0.5);
+    position: absolute;
+    top: 190px;
+    right: 12px;
+}
+
+/* Ícones */
+.icones {
+    display: flex;
+    gap: 15px;
+}
+
+.btn-icone {
+    background: none;
+    border: none;
+    color: black;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+/* Texto em vermelho */
+.vermelho {
+    color: red;
+    font-weight: bold;
+}
+
+/* Painel Inferior */
+/* Ajusta o layout das cartelas para caber no painel */
+/* Painel Inferior - Área onde as cartelas serão listadas */
+.painel-conteudo {
+    width: 100%;
+    max-width: 550px;
+    height: 500px;
+    background-color: #0096FF;
+    border-radius: 15px;
+    padding: 10px;
+    position: absolute;
+    top: 255px;
+    right: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    overflow-x: hidden;
+    color: white;
+    font-size: 22px;
+    font-weight: bold;
+    text-align: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+}
+
+/* Container das cartelas com layout flexível */
+.cartelas-container {
+    display: grid; 
+    grid-template-columns: repeat(3, 1fr); /* 🔥 Garante 3 colunas por linha */
+    gap: 15px; /* 🔥 Espaçamento entre cartelas */
+    max-width: 700px; /* 🔥 Controla a largura máxima */
+    margin: 0 auto; /* 🔥 Centraliza */
+    justify-items: center; /* 🔥 Garante que as cartelas fiquem alinhadas */
+}
+
+/* Ajuste do tamanho das cartelas para encaixar corretamente */
+.cartela-bingo {
+    width: 200px; /* 🔥 Ajuste esse valor para melhor encaixe no layout */
+    background: #f8f8f8;
+    border-radius: 10px;
+    padding: 10px;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+}
+
+
+/* Garante que os números dentro da cartela fiquem bem organizados */
+.cartela-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 5px;
+}
+
+/* Ajusta os números da cartela */
+.cartela-numero {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+    border-radius: 5px;
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+    font-weight: bold;
+    color: black;
+}

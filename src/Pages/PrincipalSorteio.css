@@ -1,0 +1,482 @@
+
+
+@media (min-width: 500px) {
+  .cartelas-faltantes-container {
+      top: 900px; /* Ajuste conforme necessário */
+      right: 50px; /* Mova para a posição desejada */
+      transform: none; /* Reseta qualquer transformação usada no mobile */
+      width: 350px; /* Ajuste a largura caso necessário */
+      height: 150px; /* Ajuste a altura caso necessário */
+  }
+}
+
+@media (max-width: 768px) {
+
+  html, body {
+    overflow-x: hidden !important; /* 🔥 Remove o scroll lateral */
+    width: 100vw !important; /* 🔥 Evita que o conteúdo ultrapasse a tela */
+    max-width: 100vw !important; /* 🔥 Mantém tudo dentro da largura da tela */
+    background-color:  #0096FF;
+}
+
+.sorteio-container .botao-iniciar,
+.sorteio-container .botao-pausar {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    height: 0 !important;
+    width: 0 !important;
+    overflow: hidden !important;
+}
+
+
+
+    .sorteio-container {
+        background-color:  #0096FF;
+        padding: 20px !important;
+        width: 100vw; /* 🔹 Ocupa toda a largura da tela */
+        position: relative; /* 🔹 Mantém o fluxo normal da página */
+        transform: translateY(-2px); /* 🔹 Garante que fique colado abaixo da Navbar */
+        left: -10px;
+        height: 170vw;
+        
+      
+        
+
+    }
+    
+  
+
+    .cards-superior {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        top: 60px; /* 🔥 Fica no topo da tela */
+        right: -19%;
+        gap: 5px;
+        transform: translateX(-20%); /* 🔥 Centraliza */
+        flex-wrap: wrap; /* 🔥 Garante que os cards quebrem linha quando atingirem o limite */
+        max-width: 98vw; /* 🔥 Evita que os cards ultrapassem o container */
+        overflow: hidden; /* 🔥 Impede que os elementos vazem */
+    }
+
+    .cards-superior .card:last-child {
+        align-self: flex-start;
+        margin-right: auto; /* 🔹 Puxa para o canto direito */
+        margin-left: 13px;
+    }
+    
+      .card {
+        width: 110px;
+        height: 60px;
+        background-color: #003366;
+        color: white;
+        border-radius: 8px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0px 4px 8px rgba(255, 255, 255, 0.3);
+        font-family: Arial, sans-serif;
+        font-weight: bold;
+        padding: 10px;
+        text-align: center;
+        transition: transform 0.2s ease-in-out;
+      }
+
+      .cards-lateral {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        position: absolute;
+        left: 20px; /* 🔥 Mantém no lado esquerdo */
+        top: 210px; /* 🔥 Ajusta abaixo do topo */
+      }
+
+      .painel-conteudo {
+        top: 1060px;
+        right: -49%;
+        transform: translateX(-50%); /* 🔥 Corrige o deslocamento para centralizar */
+        height: auto; /* 🔥 REMOVE A ALTURA FIXA */
+        min-height: 500px; /* 🔥 GARANTE UM TAMANHO MÍNIMO */
+        max-height: none; /* 🔥 PERMITE QUE CRESÇA INFINITAMENTE */
+        overflow: visible; /* 🔥 SEM SCROLL, ELE EXPANDE LIVREMENTE */
+       
+       
+    }
+
+
+    .botoes-controle{
+      display: none;
+    }
+
+    
+.numeros-sorteados {
+
+    width: 100%;
+    height: 800px; /* 🔥 Agora a altura é fixa */
+    padding: 10px;
+    margin-top: -5px; /* 🔥 Mantém a posição ajustada */
+    max-width: 800PX;
+    background-color:  #0096FF;
+  }
+
+    
+
+    .cartelas-faltantes-container {
+        width: 300px;
+        height: 120px;
+        overflow-y: auto; /* 🔥 Adiciona rolagem apenas quando necessário */
+        background-color: rgba(0, 0, 0, 0.7);
+        color: white;
+        padding: 10px;
+        border-radius: 8px;
+        position: absolute;
+        top: 700px;
+        right: 620px;
+        box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.3);
+        transform: translateX(570px);
+        transition: transform 0.3s ease-in-out, width 0.3s ease-in-out, height 0.3s ease-in-out;
+        
+    }
+
+    
+.bolas-menores {
+    display: flex;
+    gap: 20px;
+    flex-direction: column;
+    margin-left: 370px;
+    transform: translateY(-50px);
+  
+  }
+
+  .bola-pequena1 {
+    width: 75px; /* Metade do tamanho da bola maior */
+    height: 75px;
+   
+  }
+  .bola-pequena2 {
+    width: 50px; /* Metade do tamanho da bola maior */
+    height: 50px;
+    margin-left: 50px;
+
+  }
+
+  .numero-atual {
+
+    width: 150px;
+    height: 150px;
+    font-size: 90px;
+    font-weight: bold;
+    margin-right: -25px;
+    color: white;
+    margin-top: 60px;
+   
+  }
+
+  .painel-info {
+    top: 875px;
+    margin-right: -10px;
+
+}
+
+
+.numero-sorteado {
+    width: 25px;  /* Aumentado 2x o tamanho original */
+    height: 25px; /* Aumentado 2x o tamanho original */
+  
+    font-size: 17px; /* Aumentado para corresponder ao novo tamanho */
+  
+    
+  }
+
+  
+.botao-iniciar, .botao-pausar {
+
+  display: none;
+}
+
+
+
+  
+  
+  /* 🔥 Garante que sempre tenha 3 cartelas no mobile */
+/* 🔥 Garante que sempre tenha 3 cartelas por linha no mobile */
+
+    .cartelas-container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center; /* 🔥 Centraliza as cartelas */
+        gap: 0px; /* 🔥 Remove espaços entre as cartelas */
+        width: 100%;
+        max-width: 100%; /* 🔥 Ajuste para caber 3 cartelas exatas */
+        padding: 0; /* 🔥 Remove padding extra */
+        margin: 0 auto; /* 🔥 Centraliza o container */
+        
+    }
+
+    .cartela-bingo {
+        width: 135px; /* 🔥 Garante que 3 cabem na mesma linha */
+        padding: 3px; /* 🔥 Reduz o padding para economizar espaço */
+        font-size: 12px; /* 🔥 Ajusta o tamanho da fonte */
+        height: 160px; /* 🔥 Ajusta a altura */
+        margin: 0; /* 🔥 Remove margens laterais */
+    }
+
+    /* Nome do usuário no topo */
+    .cartela-header {
+        background: #003366;
+        color: yellow;
+        font-weight: bold;
+        font-size: 8px;
+        padding: 5px;
+        width: 100%; /* 🔥 Garante alinhamento correto */
+        text-align: center;
+        border-radius: 5px 5px 0 0;
+    }
+
+    .cartela-numero {
+        background: #fff;
+        border: 2px solid #e2c085;
+        font-size: 8px;
+        font-weight: bold;
+        text-align: center;
+        width: 22px;
+        height: 22px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 5px;
+    }
+
+    @media (max-width: 400px) {
+
+      html, body {
+        overflow-x: hidden !important; /* 🔥 Remove qualquer scroll lateral */
+        width: 100vw !important; /* 🔥 Evita que o conteúdo ultrapasse */
+        max-width: 100vw !important; /* 🔥 Garante que tudo fique dentro da tela */
+    }
+
+    .icones{
+      display: none;
+    }
+
+
+    .cartela-numero{
+
+      font-size: 12px;
+    }
+
+
+    .numero-atual{
+
+      margin-top: -400px;
+      margin-left: 30px;
+    }
+
+    .bolas-menores {
+
+      margin-left: 400px;
+      transform: translateY(-50px);
+    
+    }
+
+
+    .numeros-sorteados {
+     
+      gap: 5px; /* 🔥 Reduz o espaçamento entre os números */
+      width: 100%;
+      height: 50px; /* 🔥 Permite que a altura se ajuste conforme necessário */
+      padding: 5px; /* 🔥 Reduz o espaço interno */
+      margin-top: -50px; /* 🔥 Aproxima mais */
+  }
+
+    .sorteio-container {
+        overflow: hidden !important; /* 🔥 Impede que elementos internos causem scroll */
+    }
+
+    .cartelas-faltantes-container {
+      position: fixed !important; /* 🔥 Garante que fique fixo na tela */
+      top: 90%; /* 🔥 Move para 50% da altura da tela */
+      left: 50%; /* 🔥 Move para 50% da largura da tela */
+      transform: translate(-50%, -50%) !important; /* 🔥 Corrige o posicionamento exato */
+      z-index: 9999; /* 🔥 Garante que fique por cima de outros elementos */
+      background-color: rgba(0, 0, 0, 0.7); /* 🔥 Apenas para visualização */
+      width: 300px; /* Ajuste conforme necessário */
+      height: 100px; /* Ajuste conforme necessário */
+     
+  }
+  
+
+    .sorteio-container{
+      height: 850px;
+    }
+    .cartelas-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px !important; /* 🔥 espaço entre linhas e colunas */
+      width: 100%;
+      padding: 10px !important;
+      
+    }
+  
+    .cartela-bingo {
+      width: 145px !important; /* 🔥 Reduzido para garantir espaço para 3 cartelas com gaps */
+      padding: 5px !important;
+      font-size: 11px !important;
+      margin-bottom: 10px !important; /* 🔥 Espaço vertical entre cartelas */
+      box-sizing: border-box !important; /* 🔥 Garante o padding dentro da largura */
+    }
+  
+    /* 🔥 GARANTE o espaçamento mesmo que exista um wrapper interno: */
+    .cartela-bingo:not(:last-child) {
+      margin-right: 10px !important; 
+    }
+      
+  }
+  
+  
+  @media (max-width: 415px) {
+
+    .painel-conteudo{
+      margin-top: -120px;
+    }
+
+    .icones{
+      display: none;
+    }
+
+
+
+    .cartelas-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px !important; /* 🔥 espaço entre linhas e colunas */
+      width: 100%;
+      padding: 10px !important;
+      
+    }
+  
+    .cartela-bingo {
+      width: 165px !important; /* 🔥 Reduzido para garantir espaço para 3 cartelas com gaps */
+      padding: 5px !important;
+      font-size: 11px !important;
+      margin-bottom: 10px !important; /* 🔥 Espaço vertical entre cartelas */
+      box-sizing: border-box !important; /* 🔥 Garante o padding dentro da largura */
+    }
+  
+    /* 🔥 GARANTE o espaçamento mesmo que exista um wrapper interno: */
+    .cartela-bingo:not(:last-child) {
+      margin-right: 10px !important; 
+    }
+
+    .cartela-numero{
+
+      font-size: 14px;
+    }
+
+
+  }
+  
+  
+  @media (max-width: 414px) {
+    .cartelas-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px !important; /* 🔥 espaço entre linhas e colunas */
+      width: 100%;
+      padding: 10px !important;
+    
+    }
+  
+    .cartela-bingo {
+      width: 145px !important; /* 🔥 Reduzido para garantir espaço para 3 cartelas com gaps */
+      padding: 5px !important;
+      font-size: 11px !important;
+      margin-bottom: 10px !important; /* 🔥 Espaço vertical entre cartelas */
+      box-sizing: border-box !important; /* 🔥 Garante o padding dentro da largura */
+    }
+  
+    /* 🔥 GARANTE o espaçamento mesmo que exista um wrapper interno: */
+    .cartela-bingo:not(:last-child) {
+      margin-right: 10px !important; 
+    }
+    .cartela-numero{
+
+      font-size: 12px;
+    }
+
+
+  }
+  
+  @media (max-width: 431px) {
+
+    .icones{
+      display: none;
+    }
+
+    .cartelas-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px !important; /* 🔥 espaço entre linhas e colunas */
+      width: 100%;
+      padding: 10px !important;
+      
+
+    }
+  
+    .cartela-bingo {
+      width: 145px !important; /* 🔥 Reduzido para garantir espaço para 3 cartelas com gaps */
+      padding: 5px !important;
+      font-size: 11px !important;
+      margin-bottom: 10px !important; /* 🔥 Espaço vertical entre cartelas */
+      box-sizing: border-box !important; /* 🔥 Garante o padding dentro da largura */
+    }
+  
+    /* 🔥 GARANTE o espaçamento mesmo que exista um wrapper interno: */
+    .cartela-bingo:not(:last-child) {
+      margin-right: 10px !important; 
+    }
+    .cartela-numero{
+
+      font-size: 12px;
+    }
+    .painel-conteudo{
+      margin-top: -120px;
+    }
+
+  }
+  
+  @media (max-width: 360px) {
+      .cartelas-container {
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: center;
+          gap: 20px;
+          width: 100%;
+          max-width: 100%;
+          padding: 0;
+          margin: 0 auto;
+      }
+  
+      .cartela-bingo {
+          width: 165px; /* Ajustado para caber 3 cartelas na linha */
+          padding: 3px;
+          font-size: 12px;
+          height: 160px;
+          margin: 0;
+      }
+      .cartela-numero{
+
+        font-size: 12px;
+      }
+  
+  
+  }
+  
+    
+  }

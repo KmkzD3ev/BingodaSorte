@@ -1,0 +1,16 @@
+body {
+  background-image: url('./assets/img1.jpeg'); /* Caminho correto */
+  background-size: cover;  /* Ajusta a imagem para cobrir a tela */
+  background-position: center; /* Centraliza a imagem */
+  background-repeat: no-repeat; /* Evita repetição */
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+
+/*******************************************/
+
+

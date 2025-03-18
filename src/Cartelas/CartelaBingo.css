@@ -1,0 +1,68 @@
+.cartela-bingo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #f8f0d8;
+  border-radius: 10px;
+  padding: 10px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3);
+  width: 220px;
+  font-family: Arial, sans-serif;
+}
+
+/* Nome do usuário no topo */
+.cartela-header {
+  background: #003366;
+  color: yellow;
+  font-weight: bold;
+  font-size: 14px;
+  padding: 5px;
+  width: 100%;
+  text-align: center;
+  border-radius: 5px 5px 0 0;
+}
+
+/* Corpo da cartela */
+.cartela-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 5px;
+  padding: 10px 5px;
+}
+
+/* Cada número da cartela */
+.cartela-numero {
+  background: #fff;
+  border: 2px solid #e2c085;
+  font-size: 16px;
+  font-weight: bold;
+  text-align: center;
+  padding: 8px;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 5px;
+}
+
+/* Rodapé com ID */
+.cartela-footer {
+  background: #003366;
+  color: yellow;
+  font-weight: bold;
+  font-size: 14px;
+  padding: 5px;
+  width: 100%;
+  text-align: center;
+  border-radius: 0 0 5px 5px;
+}
+
+/* 🔥 Quando um número for sorteado, ele ficará destacado */
+.cartela-numero.marcado {
+  background-color: gold; /* Fundo dourado */
+  color: white; /* Texto branco */
+  font-weight: bold;
+  transform: scale(1.2); /* 🔥 Pequena animação de zoom */
+  border: 2px solid red; /* Borda vermelha */
+}

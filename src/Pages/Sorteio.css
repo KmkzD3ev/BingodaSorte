@@ -1,0 +1,248 @@
+/* Estilização do layout do sorteio seguindo a imagem fornecida */
+.sorteio-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: #062247;
+  color: white;
+  padding: 20px;
+  border-radius: 0;
+  width: 61vw;  /* Garante que cubra toda a largura da tela */
+  height: 114vh; /* Garante que cubra toda a altura da tela */
+  position: relative; /* Faz com que a div ocupe toda a tela sem depender do body */
+  left: 0;
+  top: -75px;
+}
+
+.sorteio-area {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+
+
+.titulo {
+  font-size: 30px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.bolas-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.numero-atual {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #ffcc00;
+  border-radius: 50%;
+  width: 310px;
+  height: 310px;
+  font-size: 120px;
+  font-weight: bold;
+  margin-right: 10px;
+  color: white;
+  margin-top: 40px;
+  margin-bottom: 20px;
+  box-shadow: 0 0 25px rgba(255, 255, 255, 0.5);
+  border: 5px solid white;
+}
+
+.bolas-menores {
+  display: flex;
+  gap: 20px;
+  flex-direction: column;
+  margin-left: 750px;
+  transform: translateY(-180px);
+
+}
+
+.bola-pequena1 {
+  width: 150px; /* Metade do tamanho da bola maior */
+  height: 150px;
+  background-color: #1e90ff;
+  border-radius: 50%;
+  display: flex;
+  margin-right: 180px;
+  justify-content: center;
+  align-items: center;
+  font-size: 52px;
+  font-weight: bold;
+  color: white;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
+}
+.bola-pequena2 {
+  width: 100px; /* Metade do tamanho da bola maior */
+  height: 100px;
+  background-color: #1e90ff;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 32px;
+  margin-left: 70px;
+  font-weight: bold;
+  color: white;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
+}
+
+.painel-sorteio-ajuste {
+background-color: #ff4400;
+}
+
+
+
+.numeros-sorteados {
+  display: flex;
+  flex-wrap: wrap;
+  background-color: #062247;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  height: 800px; /* 🔥 Agora a altura é fixa */
+  padding: 10px;
+  margin-top: -110px; /* 🔥 Mantém a posição ajustada */
+}
+
+
+.numero-sorteado {
+  width: 40px;  /* Aumentado 2x o tamanho original */
+  height: 40px; /* Aumentado 2x o tamanho original */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #cfd2d5;
+  border-radius: 50%;
+  font-size: 35px; /* Aumentado para corresponder ao novo tamanho */
+  font-weight: bold;
+  color: rgb(11, 11, 11);
+  border: 3px solid white; /* Um pouco mais grosso */
+  
+}
+
+
+.botoes-controle {
+  position: absolute;
+  top: 70px;  /* Distância do topo */
+  right: 20px; /* Alinha à direita */
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+}
+.vencedores {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  background-color: rgba(0, 0, 0, 0.95); /* 🔥 Torna o fundo mais sólido */
+  padding: 20px;
+  border-radius: 12px;
+  color: white;
+  font-size: 20px;
+  width: 90%;
+  max-width: 450px;
+  z-index: 99999 !important; /* 🔥 Garante que fique acima de tudo */
+  box-shadow: 0px 5px 15px rgba(255, 215, 0, 1);
+  border: 3px solid gold;
+  transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+  pointer-events: auto; /* 🔥 Permite interações */
+}
+
+/* 🔥 Garante que não seja coberto por nada */
+.vencedores * {
+  position: relative;
+  z-index: 100000 !important;
+}
+
+/* 🔥 Faz o card aparecer suavemente */
+.vencedores.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+/* 🔥 Faz o card sumir suavemente */
+.vencedores.hide {
+  opacity: 0;
+  transform: translate(-50%, -20px);
+}
+
+/* 🔥 Animação de brilho */
+@keyframes brilho {
+  0% { box-shadow: 0px 5px 15px rgba(255, 215, 0, 0.8); }
+  50% { box-shadow: 0px 5px 25px rgba(255, 215, 0, 1); }
+  100% { box-shadow: 0px 5px 15px rgba(255, 215, 0, 0.8); }
+}
+
+.vencedores {
+  animation: brilho 2s infinite alternate;
+}
+
+
+
+.vencedores h2 {
+  font-size: 22px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.vencedores ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.vencedores li {
+  font-size: 16px;
+  padding: 5px 0;
+}
+
+
+.botao-iniciar, .botao-pausar {
+  background-color: #ffcc00;
+  border: none;
+  padding: 15px 30px;
+  font-size: 20px;
+  font-weight: bold;
+  color: #062247;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.botao-iniciar:hover { background-color: #ffaa00; }
+.botao-pausar:hover { background-color: #ff4400; }
+
+@media (max-width: 500px) {
+  .sorteio-container {
+      flex-direction: column;
+      align-items: center;
+  }
+
+  .numero-atual {
+      width: 180px;
+      height: 180px;
+      font-size: 64px;
+  }
+
+  .numeros-sorteados {
+      gap: 5px;
+  }
+
+  @media (max-width: 300px) {
+    .sorteio-container {
+   background-color: #ff4400;
+    }
+  }
+
+  
+}
