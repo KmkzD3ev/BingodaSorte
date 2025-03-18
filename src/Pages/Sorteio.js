@@ -194,67 +194,67 @@ const sortearNumero = async () => {
   
   ///////////////////////////////////////////////
   const verificarVencedores = () => {
-    if (quadraSaiu && quinaSaiu && cartelaCheiaSaiu) return; // 🔥 Se todos os prêmios já foram dados, sair
+    if (quadraSaiu && quinaSaiu && cartelaCheiaSaiu) return; // 🔥 Se todos os prêmios já foram dados, sair imediatamente
   
-    let candidatosQuadra = new Set();
-    let candidatosQuina = new Set();
-    let candidatosCartelaCheia = new Set();
+    let vencedorQuadra = null;
+    let vencedorQuina = null;
+    let vencedorCartelaCheia = null;
   
     cartelas.forEach((cartela) => {
-      const linhas = [
-        cartela.casas.slice(0, 5),
-        cartela.casas.slice(5, 10),
-        cartela.casas.slice(10, 15),
-        cartela.casas.slice(15, 20),
-        cartela.casas.slice(20, 25),
-      ];
+        if (quadraSaiu && quinaSaiu && cartelaCheiaSaiu) return; // Se já saiu tudo, não precisa continuar
   
-      linhas.forEach((linha) => {
-        const marcadosNaLinha = linha.filter(num => cartela.marcados.includes(num)).length;
-  
-        if (!quadraSaiu && marcadosNaLinha === 4) {
-          candidatosQuadra.add(JSON.stringify({ userName: cartela.userName, tipo: "Quadra", cartelaId: cartela.idNumerico, userId: cartela.userId }));
+        const linhas = [
+            cartela.casas.slice(0, 5),
+            cartela.casas.slice(5, 10),
+            cartela.casas.slice(10, 15),
+            cartela.casas.slice(15, 20),
+            cartela.casas.slice(20, 25),
+        ];
+
+        linhas.forEach((linha) => {
+            const marcadosNaLinha = linha.filter(num => cartela.marcados.includes(num)).length;
+
+            if (!quadraSaiu && marcadosNaLinha === 4 && !vencedorQuadra) {
+                vencedorQuadra = { userName: cartela.userName, tipo: "Quadra", cartelaId: cartela.idNumerico, userId: cartela.userId };
+            }
+
+            if (!quinaSaiu && marcadosNaLinha === 5 && !vencedorQuina) {
+                vencedorQuina = { userName: cartela.userName, tipo: "Quina", cartelaId: cartela.idNumerico, userId: cartela.userId };
+            }
+        });
+
+        if (!cartelaCheiaSaiu && cartela.marcados.length === 25 && !vencedorCartelaCheia) {
+            vencedorCartelaCheia = { userName: cartela.userName, tipo: "Cartela Cheia", cartelaId: cartela.idNumerico, userId: cartela.userId };
         }
-  
-        if (!quinaSaiu && marcadosNaLinha === 5) {
-          candidatosQuina.add(JSON.stringify({ userName: cartela.userName, tipo: "Quina", cartelaId: cartela.idNumerico, userId: cartela.userId }));
-        }
-      });
-  
-      if (!cartelaCheiaSaiu && cartela.marcados.length === 25) {
-        candidatosCartelaCheia.add(JSON.stringify({ userName: cartela.userName, tipo: "Cartela Cheia", cartelaId: cartela.idNumerico, userId: cartela.userId }));
-      }
     });
-  
+
     let novosVencedores = [];
-  
-    if (!quadraSaiu && candidatosQuadra.size > 0) {
-      const vencedorQuadra = JSON.parse([...candidatosQuadra][Math.floor(Math.random() * candidatosQuadra.size)]);
-      novosVencedores.push(vencedorQuadra);
-      setQuadraSaiu(true);
+
+    if (vencedorQuadra) {
+        novosVencedores.push(vencedorQuadra);
+        setQuadraSaiu(true);
     }
-  
-    if (!quinaSaiu && candidatosQuina.size > 0) {
-      const vencedorQuina = JSON.parse([...candidatosQuina][Math.floor(Math.random() * candidatosQuina.size)]);
-      novosVencedores.push(vencedorQuina);
-      setQuinaSaiu(true);
+
+    if (vencedorQuina) {
+        novosVencedores.push(vencedorQuina);
+        setQuinaSaiu(true);
     }
-  
-    if (!cartelaCheiaSaiu && candidatosCartelaCheia.size > 0) {
-      const vencedorCartelaCheia = JSON.parse([...candidatosCartelaCheia][Math.floor(Math.random() * candidatosCartelaCheia.size)]);
-      novosVencedores.push(vencedorCartelaCheia);
-      setCartelaCheiaSaiu(true);
+
+    if (vencedorCartelaCheia) {
+        novosVencedores.push(vencedorCartelaCheia);
+        setCartelaCheiaSaiu(true);
     }
-  
+
     if (novosVencedores.length > 0) {
-      setVencedores((prevVencedores) => {
-        const listaUnica = new Set([...prevVencedores.map(v => JSON.stringify(v)), ...novosVencedores.map(v => JSON.stringify(v))]);
-        return [...listaUnica].map(v => JSON.parse(v));
-      });
-      salvarVitoriaUsuario(novosVencedores);
+        setVencedores((prevVencedores) => {
+            const listaUnica = new Set([...prevVencedores.map(v => JSON.stringify(v)), ...novosVencedores.map(v => JSON.stringify(v))]);
+            return [...listaUnica].map(v => JSON.parse(v));
+        });
+
+        salvarVitoriaUsuario(novosVencedores);
     }
-  };
-  
+};
+
  /* const verificarVencedores = () => {
     let novosVencedores = [];
     
@@ -434,44 +434,65 @@ const sortearNumero = async () => {
   ///////////////////////////////////////////////////////////////
   const salvarVitoriaUsuario = async (vencedores) => {
     try {
-      // 🔥 Recupera dados salvos no localStorage
-      const sorteioData = JSON.parse(localStorage.getItem('dadosSorteio') || '{}');
-  
-      for (const vencedor of vencedores) {
-        if (!vencedor.userId) {
-          console.error("❌ ERRO: ID do usuário não encontrado!", vencedor);
-          continue;
+        console.log("📌 [salvarVitoriaUsuario] Vencedores recebidos:", vencedores);
+
+        if (!vencedores || vencedores.length === 0) {
+            console.warn("⚠️ Nenhum vencedor para salvar.");
+            return;
         }
-  
-        let valorPremio = 0;
-  
-        // 🔥 Define o prêmio com base no tipo
-        if (vencedor.tipo === "Quadra") {
-          valorPremio = sorteioData.primeiroPremio;
-        } else if (vencedor.tipo === "Quina") {
-          valorPremio = sorteioData.segundoPremio;
-        } else if (vencedor.tipo === "Cartela Cheia") {
-          valorPremio = sorteioData.terceiroPremio;
+
+        // 🔥 Recupera os valores de prêmio salvos no localStorage
+        const sorteioData = JSON.parse(localStorage.getItem('dadosSorteio') || '{}');
+
+        for (const vencedor of vencedores) {
+            if (!vencedor.userId) {
+                console.error("❌ ERRO: ID do usuário não encontrado!", vencedor);
+                continue; // 🔥 Pula para o próximo vencedor se `userId` estiver ausente
+            }
+
+            let valorPremio = 0;
+
+            // 🔥 Define o valor do prêmio com base no tipo de vitória
+            if (vencedor.tipo === "Quadra") {
+                valorPremio = sorteioData.primeiroPremio || 0;
+            } else if (vencedor.tipo === "Quina") {
+                valorPremio = sorteioData.segundoPremio || 0;
+            } else if (vencedor.tipo === "Cartela Cheia") {
+                valorPremio = sorteioData.terceiroPremio || 0;
+            }
+
+            // 🔥 Referência ao documento do usuário no Firestore
+            const userRef = doc(db, "usuarios", vencedor.userId);
+
+            // 🔍 Loga os dados antes de salvar
+            console.log("📌 Salvando vitória para usuário:", {
+                userId: vencedor.userId,
+                nome: vencedor.userName,
+                tipo: vencedor.tipo,
+                cartelaId: vencedor.cartelaId,
+                valorPremio: valorPremio,
+                timestamp: new Date().toISOString(),
+            });
+
+            // 🔥 Tenta atualizar o Firestore
+            await updateDoc(userRef, {
+                premios: arrayUnion({
+                    sorteioId: Date.now().toString(),
+                    tipo: vencedor.tipo,
+                    cartelaId: vencedor.cartelaId,
+                    valorPremio: valorPremio,
+                    data: new Date().toISOString(),
+                }),
+            });
+
+            console.log(`✅ Vitória salva com sucesso: ${vencedor.userName} (${vencedor.tipo}) - R$ ${valorPremio},00`);
         }
-  
-        const userRef = doc(db, "usuarios", vencedor.userId);
-  
-        await updateDoc(userRef, {
-          premios: arrayUnion({
-            sorteioId: Date.now().toString(),
-            tipo: vencedor.tipo,
-            cartelaId: vencedor.cartelaId,
-            valorPremio: valorPremio, // Aqui você salva corretamente o valor do prêmio
-            data: new Date().toISOString(),
-          }),
-        });
-  
-        console.log(`✅ Vitória salva: ${vencedor.userName} - ${vencedor.tipo} - R$ ${valorPremio},00`);
-      }
     } catch (error) {
-      console.error("🔥 Erro ao salvar vitória do usuário:", error);
+        console.error("🔥 ERRO AO SALVAR VITÓRIA NO FIRESTORE:", error);
+        alert("Erro ao salvar vitória no Firestore. Verifique o console.");
     }
-  };
+};
+
   
 /////////////////////////////////////////////////////////
 const resetarSorteio = async () => {
