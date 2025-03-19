@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { auth, db } from "../services/firebaseconection";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc,updateDoc } from "firebase/firestore";
 import NavBar from "../Components/NavBar ";
+import { getAuthToken } from "../apiServices/AuthApi"; 
+import axios from "axios";
 
 // https://backend-proxy-6x3n.onrender.com/proxy/pagamento
 /***
@@ -44,16 +46,171 @@ const MeusPremios = () => {
 
     buscarPremios();
   }, []);
+  const handleSacar = async (premio) => {
+    try {
+        const user = auth.currentUser;
+        if (!user) {
+            console.log("⚠️ Nenhum usuário autenticado.");
+            return;
+        }
 
-  const handleSacar = (premio) => {
-    console.log("Sacar prêmio:", premio);
-    // Implemente a lógica de saque aqui
-  };
+        // 🔥 Obtendo dados do usuário do Firestore
+        const userRef = doc(db, "usuarios", user.uid);
+        const userSnap = await getDoc(userRef);
+
+        if (!userSnap.exists()) {
+            console.log("❌ Usuário não encontrado no Firestore.");
+            return;
+        }
+
+        const userData = userSnap.data();
+        const chavePix = userData.chavePix;
+        const cpf = userData.cpf;
+        const nome = userData.nome;
+
+        if (!chavePix || !nome) {
+            console.log("❌ Dados do usuário incompletos para saque.");
+            return;
+        }
+
+        // 🔥 Detectar automaticamente o tipo de chave Pix
+        let pixKeyType;
+        if (chavePix.includes("@")) {
+            pixKeyType = "email";
+        } else if (chavePix.match(/^\d{11}$/) && chavePix.startsWith("0") === false) {
+            pixKeyType = "cpf";
+        } else if (chavePix.match(/^\d{14}$/)) {
+            pixKeyType = "cnpj";
+        } else if (chavePix.match(/^\d{10,11}$/)) {
+            pixKeyType = "phone";
+        } else {
+            pixKeyType = "token";
+        }
+
+        // 🔥 Criando requisição de pagamento Pix
+        const requestData = {
+            initiation_type: "dict",
+            idempotent_id: `SAQUE_${Date.now()}`,
+            receiver_name: nome,
+            value_cents: premio.valorPremio * 100, // Convertendo para centavos
+            pix_key_type: pixKeyType,
+            pix_key: chavePix,
+            authorized: false
+        };
+
+        // 🔥 Se a chave for CPF ou CNPJ, adicionamos receiver_document
+        if (pixKeyType === "cpf" || pixKeyType === "cnpj") {
+            requestData.receiver_document = cpf;
+        }
+
+        console.log("📌 Enviando solicitação de saque:", JSON.stringify(requestData, null, 2));
+
+        const token = await getAuthToken();
+        console.log("🔑 Token de autenticação:", token);
+
+        const requestHeaders = {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json",
+        };
+
+        console.log("📌 Headers da requisição:", requestHeaders);
+
+        // 🔥 Fazendo a requisição para a API de pagamentos
+        const response = await axios.post(
+            "https://backend-proxy-6x3n.onrender.com/proxy/pagamento",
+            requestData,
+            { headers: requestHeaders }
+        );
+
+        console.log("🔹 Resposta completa da API:", response.data);
+
+        // 🔥 Captura o `reference_code` para rastreamento
+        const referenceCode = response.data.payment?.reference_code;
+
+        console.log("🔹 reference_code recebido do servidor:", referenceCode);
+
+        if (!referenceCode) {
+            console.error("❌ Erro: reference_code não retornado pela API.");
+            alert("❌ Erro ao solicitar saque: reference_code não foi retornado.");
+            return;
+        }
+
+        alert("✅ Solicitação de saque enviada! Monitorando pagamento...");
+
+        // 🔥 Agora chama a função que verifica se o pagamento foi concluído
+        verificarPagamentoSaque(referenceCode);
+
+    } catch (error) {
+        console.error("❌ Erro ao solicitar saque:", error);
+
+        // 🔥 Tratamento de erros específicos da API
+        if (error.response) {
+            console.log("🔴 Resposta de erro da API:", error.response.data);
+            if (error.response.status === 400) {
+                alert(`❌ Erro 400: ${error.response.data.error || "Requisição inválida."}`);
+            } else if (error.response.status === 422) {
+                alert(`❌ Erro 422: ${error.response.data.error || "Fundos insuficientes."}`);
+            } else if (error.response.status === 403) {
+                alert(`❌ Erro 403: ${error.response.data.error || "Beneficiário não permitido."}`);
+            } else if (error.response.status === 500) {
+                alert(`❌ Erro 500: ${error.response.data.error || "Falha na operação. Tente novamente."}`);
+            } else {
+                alert(`❌ Erro inesperado (${error.response.status}): ${error.response.data.error}`);
+            }
+        } else {
+            alert("❌ Erro desconhecido. Verifique o console.");
+        }
+    }
+};
+
+
+const verificarPagamentoSaque = async (referenceCode) => {
+    let tentativas = 0;
+    const maxTentativas = 10; // 🔥 Define quantas vezes vai tentar verificar o pagamento
+    const intervalo = 30000; // 🔥 30 segundos entre cada tentativa
+
+    const interval = setInterval(async () => {
+        try {
+            console.log(`🔍 Verificando status do pagamento para reference_code: ${referenceCode} (Tentativa ${tentativas + 1}/${maxTentativas})`);
+
+            // 🔥 Faz a requisição ao backend para verificar o status
+            const response = await axios.get(`https://backend-proxy-6x3n.onrender.com/webhook/pagamento/${referenceCode}`);
+
+            console.log("🔹 Resposta da verificação:", response.data);
+
+            // 🔥 Verifica se o pagamento foi concluído
+            if (response.data.status === "completed") {
+                console.log("✅ Pagamento confirmado!");
+                alert("✅ Seu saque foi processado com sucesso!");
+                clearInterval(interval); // 🔥 Para de verificar após o pagamento ser confirmado
+            } else {
+                console.log(`⌛ Aguardando pagamento... Status atual: ${response.data.status}`);
+            }
+
+            // 🔥 Para de tentar após atingir o limite de tentativas
+            if (++tentativas >= maxTentativas) {
+                console.log("⚠️ Tempo limite atingido para verificar o pagamento.");
+                alert("⚠️ O status do saque não foi confirmado dentro do tempo limite.");
+                clearInterval(interval);
+            }
+        } catch (error) {
+            console.error("❌ Erro ao verificar pagamento:", error);
+            clearInterval(interval);
+        }
+    }, intervalo);
+};
+
 
   const handleAdicionarSaldo = (premio) => {
     console.log("Adicionar ao saldo prêmio:", premio);
     // Implemente a lógica para adicionar saldo aqui
+
+
+
+
   };
+
+  
 
   return (
     <>
