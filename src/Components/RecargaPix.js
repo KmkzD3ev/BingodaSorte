@@ -43,30 +43,71 @@ const RecargaPix = () => {
     verificarCpf();
   }, [uid]);
 
+
+  const formatarCpf = (cpf) => {
+    cpf = cpf.replace(/\D/g, ""); // Remove caracteres não numéricos
+    return cpf
+      .replace(/^(\d{3})(\d)/, "$1.$2")
+      .replace(/^(\d{3})\.(\d{3})(\d)/, "$1.$2.$3")
+      .replace(/\.(\d{3})(\d)/, ".$1-$2");
+  };
+
+  const handleCpfChange = (e) => {
+    let rawCpf = e.target.value.replace(/\D/g, ""); // Apenas números
+    if (rawCpf.length > 11) return; // Limita a 11 dígitos
+    setCpf(rawCpf);
+  };
+
   const salvarCpf = async () => {
     try {
-      const auth = getAuth();
-      const user = auth.currentUser;
+        const auth = getAuth();
+        const user = auth.currentUser;
 
-      if (!user) {
-        setStatus("❌ Erro: Faça login antes de continuar.");
-        return;
-      }
+        if (!user) {
+            setStatus("❌ Erro: Faça login antes de continuar.");
+            return;
+        }
 
-      if (!cpf || cpf.length !== 11) {
-        return;
-      }
+        if (!cpf || cpf.length !== 11) {
+            return;
+        }
 
-      const userRef = doc(db, "usuarios", user.uid);
-      await updateDoc(userRef, { cpf });
-      setCpfUsuario(cpf); // 🔥 Atualiza o CPF diretamente no state
-      setCpfExiste(true);
-      setStatus("✅ CPF atualizado com sucesso.");
+        const userRef = doc(db, "usuarios", user.uid);
+        const userSnap = await getDoc(userRef);
+
+        if (!userSnap.exists()) {
+            setStatus("❌ Erro: Usuário não encontrado.");
+            return;
+        }
+
+        const userData = userSnap.data();
+        const saldoAtual = userData.saldo || 0; // Se o saldo não existir, assume 0
+
+        // 🔥 Verifica se o CPF já existia antes
+        const cpfJaExiste = !!userData.cpf;
+
+        await updateDoc(userRef, { cpf });
+
+        setCpfUsuario(cpf); // 🔥 Atualiza o CPF diretamente no state
+        setCpfExiste(true); // 🔥 Oculta o campo de CPF após salvar
+
+        // 🔥 Se o CPF não existia antes, adicionamos o bônus
+        if (!cpfJaExiste) {
+            const novoSaldo = saldoAtual + 10; // Adiciona R$10,00 ao saldo
+
+            await updateDoc(userRef, { saldo: novoSaldo });
+
+          
+
+            console.log(`✅ Bônus de R$10,00 adicionado! Novo saldo: R$${novoSaldo},00`);
+        }
+
+        setStatus("✅ CPF atualizado com sucesso.");
     } catch (error) {
-      console.error("❌ Erro ao atualizar CPF no Firestore:", error);
-      setStatus("❌ Erro ao atualizar CPF.");
+        console.error("❌ Erro ao atualizar CPF no Firestore:", error);
+        setStatus("❌ Erro ao atualizar CPF.");
     }
-  };
+};
 
   const gerarQrCode = async () => {
     if (!valor || isNaN(valor) || parseFloat(valor) < 2) {
@@ -178,7 +219,7 @@ const verificarPagamentoAutomatico = async (referenceCode) => {
       setStatus("❌ Erro ao verificar pagamento.");
       clearInterval(interval); // Se der erro, para de tentar
     }
-  }, 5000); // 🔄 Verifica a cada 5 segundos
+  }, 60000); // 🔄 Verifica a cada 5 segundos
 };
 
 
@@ -242,12 +283,13 @@ const verificarPagamentoAutomatico = async (referenceCode) => {
 
         {!cpfExiste && !loading && (
           <div className="input-group">
-            <input
-              type="text"
-              placeholder="Insira CPF para resgatar o bônus!"
-              value={cpf}
-              onChange={(e) => setCpf(e.target.value)}
-            />
+           <input
+        type="text"
+        placeholder="Digite seu CPF"
+        value={formatarCpf(cpf)} // Exibe formatado
+        onChange={handleCpfChange} // Guarda sem máscara
+        maxLength="14" // Permite a máscara visual
+      />
             <button onClick={salvarCpf}>Salvar CPF</button>
           </div>
         )}

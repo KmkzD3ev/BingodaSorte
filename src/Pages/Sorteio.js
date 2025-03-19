@@ -10,6 +10,9 @@ import PainelInfo from "../Components/PainelInfo"
 import CartelasFaltantes from "../Cartelas/CartelasFaltantes";
 import CardsSorteio from "../Components/CardsSorteio";
 import { auth } from "../services/firebaseconection"; // 🔥 Importa autenticação Firebase
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 
 
 const Sorteio = () => {
@@ -255,6 +258,7 @@ const sortearNumero = async () => {
         });
 
         salvarVitoriaUsuario(novosVencedores);
+        
     }
 };
 
@@ -444,6 +448,97 @@ const sortearNumero = async () => {
             return;
         }
 
+        // 🔥 Recupera os valores do sorteio (incluindo acumulado)
+        const sorteioData = JSON.parse(localStorage.getItem('sorteioData') || '{}');
+
+        console.log("📌 Valores do Sorteio Recuperados:", sorteioData);
+
+        for (const vencedor of vencedores) {
+            if (!vencedor.userId) {
+                console.error("❌ ERRO: ID do usuário não encontrado!", vencedor);
+                continue;
+            }
+
+            let valorPremio = 0;
+
+            if (vencedor.tipo === "Quadra") {
+                valorPremio = sorteioData.primeiro || 0;
+            } else if (vencedor.tipo === "Quina") {
+                valorPremio = sorteioData.segundo || 0;
+            } else if (vencedor.tipo === "Cartela Cheia") {
+                valorPremio = sorteioData.terceiro || 0;
+            }
+
+            // 🔥 Verifica se atingiu a quantidade de bolas sorteadas para pagar o acumulado
+            let ganhouAcumulado = false;
+            let valorAcumulado = 0;
+            
+            if (numerosSorteados.length >= sorteioData.quantidadeAcumulado) {
+                ganhouAcumulado = true;
+                valorAcumulado = sorteioData.acumulado || 0;
+            }
+
+            // 🔥 Referência ao documento do usuário no Firestore
+            const userRef = doc(db, "usuarios", vencedor.userId);
+
+            // 🔥 Obtém os prêmios atuais para evitar duplicação
+            const userSnap = await getDoc(userRef);
+            let premiosAtuais = [];
+            if (userSnap.exists()) {
+                premiosAtuais = userSnap.data().premios || [];
+            }
+
+            // 🔥 Verifica se o prêmio já foi concedido ao usuário
+            const jaGanhou = premiosAtuais.some(premio =>
+                premio.tipo === vencedor.tipo &&
+                premio.cartelaId === vencedor.cartelaId
+            );
+
+            if (jaGanhou) {
+                console.warn(`⚠️ Usuário ${vencedor.userName} já recebeu o prêmio ${vencedor.tipo}. Pulando...`);
+                continue;
+            }
+
+            console.log("📌 Salvando vitória para usuário:", {
+                userId: vencedor.userId,
+                nome: vencedor.userName,
+                tipo: vencedor.tipo,
+                cartelaId: vencedor.cartelaId,
+                valorPremio: valorPremio,
+                ganhouAcumulado: ganhouAcumulado,
+                valorAcumulado: valorAcumulado,
+                timestamp: new Date().toISOString(),
+            });
+
+            // 🔥 Tenta atualizar o Firestore
+            await updateDoc(userRef, {
+                premios: arrayUnion({
+                    sorteioId: Date.now().toString(),
+                    tipo: vencedor.tipo,
+                    cartelaId: vencedor.cartelaId,
+                    valorPremio: valorPremio,
+                    valorAcumulado: ganhouAcumulado ? valorAcumulado : 0,
+                    data: new Date().toISOString(),
+                }),
+            });
+
+            console.log(`✅ Vitória salva com sucesso: ${vencedor.userName} (${vencedor.tipo}) - R$ ${valorPremio},00 ${ganhouAcumulado ? `+ Acumulado: R$ ${valorAcumulado},00` : ''}`);
+        }
+    } catch (error) {
+        console.error("🔥 ERRO AO SALVAR VITÓRIA NO FIRESTORE:", error);
+        alert("Erro ao salvar vitória no Firestore. Verifique o console.");
+    }
+};
+
+  /*const salvarVitoriaUsuario = async (vencedores) => {
+    try {
+        console.log("📌 [salvarVitoriaUsuario] Vencedores recebidos:", vencedores);
+
+        if (!vencedores || vencedores.length === 0) {
+            console.warn("⚠️ Nenhum vencedor para salvar.");
+            return;
+        }
+
         // 🔥 Recupera os valores de prêmio salvos no localStorage
        // const sorteioData = JSON.parse(localStorage.getItem('dadosSorteio') || '{}');
        const sorteioData = JSON.parse(localStorage.getItem('sorteioData') || '{}');
@@ -518,7 +613,7 @@ const sortearNumero = async () => {
         console.error("🔥 ERRO AO SALVAR VITÓRIA NO FIRESTORE:", error);
         alert("Erro ao salvar vitória no Firestore. Verifique o console.");
     }
-};
+};*/
 
   
 /////////////////////////////////////////////////////////
