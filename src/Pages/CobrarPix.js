@@ -4,7 +4,7 @@ import RecargaPix from "../Components/RecargaPix"; // Importando RecargaPix
 const CobrarPix = () => {
   return (
     <div style={styles.container}>
-      <h1>Cobrança via Pix</h1>
+      <h1>PRIMEIRO DEPÓSITO VOCÊ GANHAR 10,00$ DE BÔNUS PARA CONHECER NOSSO BINGO DA SORTE ☘️🥳</h1>
       <RecargaPix /> {/* Chamando o componente filho */}
     </div>
   );
