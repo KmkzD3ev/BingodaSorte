@@ -17,6 +17,7 @@
     "react-router-dom": "^7.1.5",
     "react-scripts": "5.0.1",
     "react-text-to-speech": "^1.4.1",
+    "react-toastify": "^11.0.5",
     "responsivevoice": "^0.4.1",
     "web-vitals": "^4.2.4"
   },

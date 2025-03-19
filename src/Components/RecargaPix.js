@@ -166,11 +166,23 @@ console.log("📌 Headers da requisição:", requestHeaders); // Loga os headers
 
       const response = await axios.post("https://backend-proxy-6x3n.onrender.com/proxy/qrcode", requestData, { headers: requestHeaders });
 
+      // **Aqui armazenamos o reference_code correto vindo do servidor**
+      console.log("🔹 Resposta completa da API:", response.data);
+
+
       const qrData = response.data.qrcode;
       setCodigoPix(qrData.content);
       setStatus("✅ QR Code gerado! Efetue o pagamento.");
 
-      verificarPagamentoAutomatico(requestData.external_reference);
+      const referenceCode = response.data.qrcode?.reference_code;
+
+      console.log("🔹 reference_code recebido do servidor:", referenceCode);
+      
+      if (referenceCode) {
+          verificarPagamentoAutomatico(referenceCode); // Usa o código correto
+      } else {
+          setStatus("⚠️ Erro: reference_code não retornado pelo servidor.");
+      }
 
       console.log("🔹 Dados enviados para gerar QR Code:", {
         valor: requestData.valor,
@@ -193,23 +205,52 @@ console.log("📌 Headers da requisição:", requestHeaders); // Loga os headers
 
 // 🔥 Verificar pagamento automaticamente (Polling)
 const verificarPagamentoAutomatico = async (referenceCode) => {
-  let tentativas = 0; // Número de tentativas de verificação
-  const maxTentativas = 10; // Limite de tentativas (exemplo: 10 verificações)
+  let tentativas = 0; 
+  const maxTentativas = 10; 
 
   const interval = setInterval(async () => {
     try {
-      // 🔍 Faz a requisição para consultar o pagamento
+      // 🔍 Busca o pagamento pelo endpoint correto
       const response = await axios.get(`https://backend-proxy-6x3n.onrender.com/webhook/pagamento/${referenceCode}`);
 
-      // ✅ Se o pagamento for confirmado, para a verificação
       if (response.data.status === "paid") {
         setStatus("✅ Pagamento confirmado!");
-        clearInterval(interval); // Para a verificação automática
+        clearInterval(interval);
+
+        // 🔥 Pega o valor pago
+        const valorPagoCentavos = response.data.value_cents || 0;
+        const valorPagoReais = valorPagoCentavos / 100; // Converte centavos para reais
+
+        console.log(`💰 Valor pago: R$${valorPagoReais.toFixed(2)}`);
+
+        // 🔥 Atualiza o saldo no Firestore
+        if (uid) {
+          const userRef = doc(db, "usuarios", uid);
+          const userSnap = await getDoc(userRef);
+
+          if (userSnap.exists()) {
+            const saldoAtual = userSnap.data().saldo || 0;
+            const novoSaldo = saldoAtual + valorPagoReais;
+
+            await updateDoc(userRef, {
+              saldo: novoSaldo,
+              depositoPix: [...(userSnap.data().depositoPix || []), valorPagoReais] // Adiciona o valor ao array existente
+            });
+            
+            console.log(`✅ Saldo atualizado para: R$${novoSaldo.toFixed(2)}`);
+            window.alert(`🎉 Recarga concluída! Seu saldo foi atualizado com R$${novoSaldo.toFixed(2)}`);
+
+          }
+        }
+
+        resetarEstado();
+
+
+
       } else {
         setStatus(`⌛ Aguardando pagamento... Tentativa ${tentativas + 1}/${maxTentativas}`);
       }
 
-      // 📌 Se atingirmos o limite de tentativas, paramos a verificação
       if (++tentativas >= maxTentativas) {
         clearInterval(interval);
         setStatus("⚠️ Tempo limite atingido. Verifique manualmente mais tarde.");
@@ -217,10 +258,20 @@ const verificarPagamentoAutomatico = async (referenceCode) => {
     } catch (error) {
       console.error("❌ Erro ao verificar pagamento:", error);
       setStatus("❌ Erro ao verificar pagamento.");
-      clearInterval(interval); // Se der erro, para de tentar
+      clearInterval(interval);
     }
-  }, 60000); // 🔄 Verifica a cada 5 segundos
+  }, 30000);
 };
+
+
+const resetarEstado = () => {
+  console.log("🔄 Resetando estados para nova recarga...");
+  setCodigoPix("");
+  setValor("");
+  setStatus("");
+};
+
+
 
 
   const styles = `
