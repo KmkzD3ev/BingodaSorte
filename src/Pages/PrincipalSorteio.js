@@ -5,6 +5,7 @@ import PainelInfo from "../Components/PainelInfo";
 import CartelasFaltantes from "../Cartelas/CartelasFaltantes";
 import CardsSorteio from "../Components/CardsSorteio";
 import "../Pages/PrincipalSorteio.css"
+
 const PrincipalSorteio = () => {
   return (
     <div className="container-fluid principal-sorteio">

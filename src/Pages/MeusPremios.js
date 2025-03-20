@@ -13,6 +13,8 @@ import axios from "axios";
 const MeusPremios = () => {
   const [premios, setPremios] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [saquesConcluidos, setSaquesConcluidos] = useState([]);
+  const [valorSaqueAtual, setValorSaqueAtual] = useState(0);
 
   useEffect(() => {
     const buscarPremios = async () => {
@@ -97,8 +99,12 @@ const MeusPremios = () => {
             pix_key_type: pixKeyType,
             pix_key: chavePix,
             authorized: true
+
+          
             //FALTA DE AUTORIZAÇAO
         };
+
+        setValorSaqueAtual(premio.valorPremio);
 
         // 🔥 Se a chave for CPF ou CNPJ, adicionamos receiver_document
         if (pixKeyType === "cpf" || pixKeyType === "cnpj") {
@@ -140,8 +146,7 @@ const MeusPremios = () => {
         alert("✅ Solicitação de saque enviada! Monitorando pagamento...");
 
         // 🔥 Agora chama a função que verifica se o pagamento foi concluído
-        verificarPagamentoSaque(referenceCode);
-
+        verificarPagamentoSaque(referenceCode, premio.sorteioId);
     } catch (error) {
         console.error("❌ Erro ao solicitar saque:", error);
 
@@ -166,7 +171,7 @@ const MeusPremios = () => {
 };
 
 
-const verificarPagamentoSaque = async (referenceCode) => {
+  const verificarPagamentoSaque = async (referenceCode, sorteioId) => {
     let tentativas = 0;
     const maxTentativas = 10; // 🔥 Define quantas vezes vai tentar verificar o pagamento
     const intervalo = 30000; // 🔥 30 segundos entre cada tentativa
@@ -184,6 +189,39 @@ const verificarPagamentoSaque = async (referenceCode) => {
             if (response.data.status === "completed") {
                 console.log("✅ Pagamento confirmado!");
                 alert("✅ Seu saque foi processado com sucesso!");
+
+
+                
+                const user = auth.currentUser;
+                if (!user) {
+                    console.log("⚠️ Nenhum usuário autenticado.");
+                    clearInterval(interval);
+                    return;
+                }
+
+                const userRef = doc(db, "usuarios", user.uid);
+                const userSnap = await getDoc(userRef);
+
+                if (!userSnap.exists()) {
+                    console.log("❌ Usuário não encontrado no Firestore.");
+                    clearInterval(interval);
+                    return;
+                }
+
+                const userData = userSnap.data();
+                const saqueAtual = userData.saquePix || 0;
+                const novoSaquePix = saqueAtual + valorSaqueAtual; // 🔥 Pegando o valor do estado global
+
+                console.log(`💰 Atualizando saquePix: ${saqueAtual} ➡️ ${novoSaquePix}`);
+
+                await updateDoc(userRef, {
+                    saquePix: novoSaquePix
+                });
+
+                
+
+                setSaquesConcluidos((prev) => [...prev, sorteioId]);
+
                 clearInterval(interval); // 🔥 Para de verificar após o pagamento ser confirmado
             } else {
                 console.log(`⌛ Aguardando pagamento... Status atual: ${response.data.status}`);
@@ -251,14 +289,23 @@ const verificarPagamentoSaque = async (referenceCode) => {
                   🎲 Sorteio ID: <strong>{premio.sorteioId}</strong>
                 </p>
 
-                <div style={{ display: "flex", justifyContent: "space-between", marginTop: "10px" }}>
-                  <button onClick={() => handleSacar(premio)} style={{ padding: "6px 12px", background: "#28a745", color: "#fff", border: "none", borderRadius: "5px", cursor: "pointer" }}>
-                    Sacar
-                  </button>
-                  <button onClick={() => console.log("Adicionar ao saldo:", premio)} style={{ padding: "6px 12px", background: "#007bff", color: "#fff", border: "none", borderRadius: "5px", cursor: "pointer" }}>
-                    Adc ao saldo
-                  </button>
-              </div>
+                {saquesConcluidos.includes(premio.sorteioId) ? (
+  // ✅ Se o prêmio já foi sacado, exibe apenas "Saque Concluído!" e oculta os botões
+  <p style={{ color: "green", fontWeight: "bold", fontSize: "16px", textAlign: "center" }}>
+    ✅ Saque Concluído!
+  </p>
+) : (
+  // 🔥 Caso contrário, mantém os botões visíveis
+  <div style={{ display: "flex", justifyContent: "space-between", marginTop: "10px" }}>
+    <button onClick={() => handleSacar(premio)} style={{ padding: "6px 12px", background: "#28a745", color: "#fff", border: "none", borderRadius: "5px", cursor: "pointer" }}>
+      Sacar
+    </button>
+    <button onClick={() => console.log("Adicionar ao saldo:", premio)} style={{ padding: "6px 12px", background: "#007bff", color: "#fff", border: "none", borderRadius: "5px", cursor: "pointer" }}>
+      Adc ao saldo
+    </button>
+  </div>
+)}
+
               </div>
             ))}
           </div>

@@ -12,7 +12,7 @@ import CardsSorteio from "../Components/CardsSorteio";
 import { auth } from "../services/firebaseconection"; // 🔥 Importa autenticação Firebase
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import Vencedores from "../Components/Vencedores";
+
 
 
 
@@ -709,9 +709,7 @@ const resetarSorteio = async () => {
     </div>
     <CartelasFaltantes cartelas={cartelas} numerosSorteados={numerosSorteados} />
     </div>
-    <div>
-    <Vencedores vencedores={vencedores} />
-    </div>
+   
 
     </div>
     </div>
