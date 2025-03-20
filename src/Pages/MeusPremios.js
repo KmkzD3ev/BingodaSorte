@@ -96,7 +96,7 @@ const MeusPremios = () => {
             value_cents: premio.valorPremio * 100, // Convertendo para centavos
             pix_key_type: pixKeyType,
             pix_key: chavePix,
-            authorized: false 
+            authorized: true
             //FALTA DE AUTORIZAÇAO
         };
 

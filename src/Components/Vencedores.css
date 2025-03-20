@@ -1,0 +1,52 @@
+.vencedores-container {
+    width: 100%;
+    max-width: 500px;
+    margin: 20px auto;
+    padding: 15px;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    transition: all 0.3s ease-in-out;
+  }
+  
+  .vencedores-container h2 {
+    color: #2c3e50;
+    font-size: 20px;
+    margin-bottom: 10px;
+  }
+  
+  .nenhum-vencedor {
+    font-size: 16px;
+    color: #7f8c8d;
+  }
+  
+  .lista-vencedores {
+    list-style: none;
+    padding: 0;
+  }
+  
+  .vencedor-item {
+    font-size: 16px;
+    padding: 10px;
+    background: #ecf0f1;
+    margin: 5px 0;
+    border-radius: 5px;
+  }
+  
+  .cartela-info {
+    font-size: 14px;
+    color: #95a5a6;
+  }
+  
+  .show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  
+  .hide {
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+  
