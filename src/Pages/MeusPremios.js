@@ -57,6 +57,7 @@ const MeusPremios = () => {
         // 🔥 Obtendo dados do usuário do Firestore
         const userRef = doc(db, "usuarios", user.uid);
         const userSnap = await getDoc(userRef);
+//AGUARDANDO LIBERAÇAO
 
         if (!userSnap.exists()) {
             console.log("❌ Usuário não encontrado no Firestore.");
