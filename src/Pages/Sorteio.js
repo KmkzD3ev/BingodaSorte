@@ -12,12 +12,13 @@ import CardsSorteio from "../Components/CardsSorteio";
 import { auth } from "../services/firebaseconection"; // 🔥 Importa autenticação Firebase
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import Vencedores from "../Components/Vencedores";
 
 
 
 
 const Sorteio = () => {
-  const { numerosSorteados, setNumerosSorteados, sorteando, setSorteando, numeroAtual, setNumeroAtual } =
+  const { numerosSorteados, setNumerosSorteados, sorteando, setSorteando, numeroAtual, setNumeroAtual,iniciarSorteioExterno, setIniciarSorteioExterno } =
     useContext(BingoContext);
     const { uid } = useContext(UserContext);
 
@@ -42,7 +43,28 @@ const Sorteio = () => {
   const [mostrarVencedores, setMostrarVencedores] = useState(false); 
   const [exibindoVencedores, setExibindoVencedores] = useState(false); 
 
-
+  useEffect(() => {
+    if (iniciarSorteioExterno) {
+      console.log("🚀 Iniciando sorteio automaticamente via MonitorSorteios!");
+  
+      // 🔥 Reseta todos os estados necessários
+      setSorteando(true);  // Ativa o sorteio
+      setNumerosSorteados([]);  // Reseta os números sorteados
+      setNumeroAtual(null);  // Reseta o último número sorteado
+      setVencedores([]);  // Reseta a lista de vencedores
+      setQuadraSaiu(false);  // 🔥 Reseta flag da Quadra
+      setQuinaSaiu(false);  // 🔥 Reseta flag da Quina
+      setCartelaCheiaSaiu(false);  // 🔥 Reseta flag da Cartela Cheia
+  
+      setTimeout(() => {
+        console.log("🎯 Iniciando primeiro número do sorteio...");
+        sortearNumero();  // 🔥 Chama a função para iniciar o sorteio automaticamente
+      }, 1000); // 🔥 Aguarda 1 segundo antes de iniciar o primeiro número
+  
+      setIniciarSorteioExterno(false);  // 🔥 Reseta o comando externo para evitar loops
+    }
+  }, [iniciarSorteioExterno]);
+  
 
 
 
@@ -257,6 +279,10 @@ const sortearNumero = async () => {
             const listaUnica = new Set([...prevVencedores.map(v => JSON.stringify(v)), ...novosVencedores.map(v => JSON.stringify(v))]);
             return [...listaUnica].map(v => JSON.parse(v));
         });
+
+
+
+        
 
         salvarVitoriaUsuario(novosVencedores);
         
@@ -675,38 +701,11 @@ const resetarSorteio = async () => {
         ))}
       </div>
 
-     <div className={`vencedores ${mostrarVencedores ? "show" : "hide"}`}>
-  <h2>🏆 Vencedores 🏆</h2>
-  {vencedores.length === 0 ? (
-    <p>Nenhum vencedor ainda...</p>
-  ) : (
-    <ul>
-      {vencedores.map((vencedor, index) => (
-        <li key={index}>
-          🎉 {vencedor.tipo} - {vencedor.userName} (Cartela: {vencedor.cartelaId})
-        </li>
-      ))}
-    </ul>
-  )}
-</div>
+     <div>
+     <Vencedores vencedores={vencedores} />
 
-      <div className="botoes-controle">
-  <button onClick={() => {
-    setSorteando(true);  // Inicia o sorteio
-    setNumerosSorteados([]);  // Reseta os números sorteados
-    setNumeroAtual(null);  // Reseta o último número sorteado
-    setVencedores([]);  // Reseta a lista de vencedores
-    setQuadraSaiu(false);  // Reseta flag da Quadra
-    setQuinaSaiu(false);  // Reseta flag da Quina
-    setCartelaCheiaSaiu(false);  // Reseta flag da Cartela Cheia
-  }} disabled={sorteando}>
-    Iniciar Sorteio
-  </button>
+     </div>
 
-  <button onClick={() => setSorteando(false)} disabled={!sorteando}>
-    Pausar Sorteio
-  </button>
-    </div>
     <CartelasFaltantes cartelas={cartelas} numerosSorteados={numerosSorteados} />
     </div>
    

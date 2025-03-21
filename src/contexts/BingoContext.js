@@ -10,6 +10,9 @@ export const BingoProvider = ({ children }) => {
   const [numerosSorteados, setNumerosSorteados] = useState([]);
   const [sorteando, setSorteando] = useState(false);
   const [numeroAtual, setNumeroAtual] = useState(null);
+  // 🔥 Estado para receber comando externo de início do sorteio
+const [iniciarSorteioExterno, setIniciarSorteioExterno] = useState(false);
+
   
 
 
@@ -79,6 +82,8 @@ export const BingoProvider = ({ children }) => {
         setSorteando,
         numeroAtual,
         setNumeroAtual,
+        iniciarSorteioExterno, // 🔥 Adicionando a variável no Contexto
+        setIniciarSorteioExterno, // 🔥 Permite alterar esse estado de qualquer componente
       }}
     >
       {children}
