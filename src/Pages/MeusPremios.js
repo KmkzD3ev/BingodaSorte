@@ -15,6 +15,8 @@ const MeusPremios = () => {
   const [loading, setLoading] = useState(true);
   const [saquesConcluidos, setSaquesConcluidos] = useState([]);
   const [valorSaqueAtual, setValorSaqueAtual] = useState(0);
+  const [loadingSaque, setLoadingSaque] = useState(false);
+
 
   useEffect(() => {
     const buscarPremios = async () => {
@@ -39,7 +41,10 @@ const MeusPremios = () => {
         const userData = userSnap.data();
         const premiosUsuario = userData.premios || [];
 
-        setPremios(premiosUsuario);
+        const premiosDisponiveis = premiosUsuario.filter(premio => premio.status !== "sacado");
+
+        setPremios(premiosDisponiveis);
+
       } catch (error) {
         console.error("🔥 Erro ao buscar prêmios do usuário:", error);
       }
@@ -49,6 +54,9 @@ const MeusPremios = () => {
     buscarPremios();
   }, []);
   const handleSacar = async (premio) => {
+    setLoadingSaque(true);
+
+
     try {
         const user = auth.currentUser;
         if (!user) {
@@ -114,7 +122,7 @@ const MeusPremios = () => {
         console.log("📌 Enviando solicitação de saque:", JSON.stringify(requestData, null, 2));
 
         const token = await getAuthToken();
-        console.log("🔑 Token de autenticação:", token);
+        //console.log("🔑 Token de autenticação:", token);
 
         const requestHeaders = {
             "Authorization": `Bearer ${token}`,
@@ -146,7 +154,7 @@ const MeusPremios = () => {
         alert("✅ Solicitação de saque enviada! Monitorando pagamento...");
 
         // 🔥 Agora chama a função que verifica se o pagamento foi concluído
-        verificarPagamentoSaque(referenceCode, premio.sorteioId);
+        verificarPagamentoSaque(referenceCode, premio.sorteioId, premio.valorPremio);
     } catch (error) {
         console.error("❌ Erro ao solicitar saque:", error);
 
@@ -171,7 +179,7 @@ const MeusPremios = () => {
 };
 
 
-  const verificarPagamentoSaque = async (referenceCode, sorteioId) => {
+  const verificarPagamentoSaque = async (referenceCode, sorteioId,valorPremio) => {
     let tentativas = 0;
     const maxTentativas = 10; // 🔥 Define quantas vezes vai tentar verificar o pagamento
     const intervalo = 30000; // 🔥 30 segundos entre cada tentativa
@@ -210,17 +218,26 @@ const MeusPremios = () => {
 
                 const userData = userSnap.data();
                 const saqueAtual = userData.saquePix || 0;
-                const novoSaquePix = saqueAtual + valorSaqueAtual; // 🔥 Pegando o valor do estado global
+                const novoSaquePix = saqueAtual + valorPremio; // 🔥 Usando o valor recebido como argumento
+
 
                 console.log(`💰 Atualizando saquePix: ${saqueAtual} ➡️ ${novoSaquePix}`);
 
+                 // 🔥 Atualizando Firestore (saldo + marcar prêmio como sacado)
+                 let premiosAtualizados = userData.premios.map(premio =>
+                  premio.sorteioId === sorteioId ? { ...premio, status: "sacado" } : premio
+              );
+
                 await updateDoc(userRef, {
-                    saquePix: novoSaquePix
+                    saquePix: novoSaquePix,
+                    premios: premiosAtualizados
                 });
 
                 
 
                 setSaquesConcluidos((prev) => [...prev, sorteioId]);
+
+                setLoadingSaque(false);
 
                 clearInterval(interval); // 🔥 Para de verificar após o pagamento ser confirmado
             } else {
@@ -231,6 +248,7 @@ const MeusPremios = () => {
             if (++tentativas >= maxTentativas) {
                 console.log("⚠️ Tempo limite atingido para verificar o pagamento.");
                 alert("⚠️ O status do saque não foi confirmado dentro do tempo limite.");
+                setLoadingSaque(false);
                 clearInterval(interval);
             }
         } catch (error) {
@@ -250,11 +268,52 @@ const MeusPremios = () => {
 
   };
 
+
+
   
 
   return (
     <>
       <NavBar />
+
+      
+  <style>{`
+    .spinner-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.8);
+      z-index: 2000;
+    }
+  
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 5px solid #28a745;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+  
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  `}</style>
+  
+
+      {loadingSaque && (
+  <div className="spinner-container">
+    <div className="spinner"></div>
+    <p>Processando saque Pix...</p>
+  </div>
+)}
 
       <div style={{ maxWidth: "800px", margin: "40px auto", padding: "20px", background: "#fff", borderRadius: "10px", boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)" }}>
         <h2 style={{ textAlign: "center", marginBottom: "30px", fontSize: "24px", fontWeight: "bold" }}>

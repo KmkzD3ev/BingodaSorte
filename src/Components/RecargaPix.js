@@ -209,6 +209,10 @@ const verificarPagamentoAutomatico = async (referenceCode) => {
   let tentativas = 0; 
   const maxTentativas = 10; 
 
+  console.log("⌛ Aguardando 10 segundos antes da primeira verificação...");
+  await new Promise(resolve => setTimeout(resolve, 10000)); // 🔥 Espera 10s antes da primeira requisição
+
+
   const interval = setInterval(async () => {
     try {
       // 🔍 Busca o pagamento pelo endpoint correto
