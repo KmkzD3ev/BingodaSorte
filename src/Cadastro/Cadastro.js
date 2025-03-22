@@ -39,6 +39,8 @@ const Cadastro = () => {
       // 🔹 Criar usuário no Firebase Authentication
       const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.senha);
       const user = userCredential.user;
+      const refUid = new URLSearchParams(window.location.search).get("ref");
+
 
       // 🔹 Criar documento no Firestore para armazenar os dados do usuário
       await setDoc(doc(db, "usuarios", user.uid), {
@@ -51,7 +53,8 @@ const Cadastro = () => {
         saldo: 0.00,
         depositoPix: [],
         saquePix: [],
-        premios: []
+        premios: [],
+        indicador: refUid || null ,
       });
 
       // 🔹 Criar uma coleção separada para armazenar cartelas

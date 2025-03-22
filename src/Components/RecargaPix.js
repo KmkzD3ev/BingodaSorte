@@ -20,6 +20,8 @@ const RecargaPix = () => {
   const [cpfExiste, setCpfExiste] = useState(false);
   const [loadingQr, setLoadingQr] = useState(false); // 🔹 Estado para mostrar o diálogo de carregamento
   const [cpfUsuario, setCpfUsuario] = useState(""); // 🔥 Armazena o CPF do usuário
+  const [msgAguardandoPagamento, setMsgAguardandoPagamento] = useState(false);
+
 
   useEffect(() => {
     const verificarCpf = async () => {
@@ -173,8 +175,11 @@ console.log("📌 Headers da requisição:", requestHeaders); // Loga os headers
 
       const qrData = response.data.qrcode;
       setCodigoPix(qrData.content);
-      setStatus("✅ QR Code gerado! Efetue o pagamento.");
-
+      setMsgAguardandoPagamento(true); // 🔥 Mostra mensagem de "Processando pagamento..."
+      setTimeout(() => {
+        setStatus("⌛ Processando pagamento... Aguarde confirmação.");
+      }, 6000); // Exibe após 6 segundos
+      
       const referenceCode = response.data.qrcode?.reference_code;
 
       console.log("🔹 reference_code recebido do servidor:", referenceCode);
@@ -228,25 +233,67 @@ const verificarPagamentoAutomatico = async (referenceCode) => {
 
         console.log(`💰 Valor pago: R$${valorPagoReais.toFixed(2)}`);
 
-        // 🔥 Atualiza o saldo no Firestore
-        if (uid) {
-          const userRef = doc(db, "usuarios", uid);
-          const userSnap = await getDoc(userRef);
+  // Dentro do if (response.data.status === "paid") { ... }
+if (uid) {
+  const userRef = doc(db, "usuarios", uid);
+  const userSnap = await getDoc(userRef);
 
-          if (userSnap.exists()) {
-            const saldoAtual = userSnap.data().saldo || 0;
-            const novoSaldo = saldoAtual + valorPagoReais;
+  if (userSnap.exists()) {
+    const userData = userSnap.data();
+    const saldoAtual = userData.saldo || 0;
+    const novoSaldo = saldoAtual + valorPagoReais;
 
-            await updateDoc(userRef, {
-              saldo: novoSaldo,
-              depositoPix: [...(userSnap.data().depositoPix || []), valorPagoReais] // Adiciona o valor ao array existente
-            });
-            
-            console.log(`✅ Saldo atualizado para: R$${novoSaldo.toFixed(2)}`);
-            window.alert(`🎉 Recarga concluída! Seu saldo foi atualizado com R$${novoSaldo.toFixed(2)}`);
+    // Atualiza saldo e depósitos
+    await updateDoc(userRef, {
+      saldo: novoSaldo,
+      depositoPix: [ ...(userData.depositoPix || []),
+      {
+        valor: valorPagoReais,
+        data: new Date().toISOString(), // data e hora completa
+        metodo: "Pix",
+        referencia: referenceCode
+      }]
+    });
 
-          }
-        }
+    console.log(`✅ Saldo atualizado para: R$${novoSaldo.toFixed(2)}`);
+
+    // 🔥 Se usuário foi indicado, registrar a comissão
+    const uidIndicador = userData.indicador;
+    if (uidIndicador) {
+      const indicadorRef = doc(db, "usuarios", uidIndicador);
+      const indicadorSnap = await getDoc(indicadorRef);
+
+      if (indicadorSnap.exists()) {
+        const dadosIndicador = indicadorSnap.data();
+        const ganhosAtuais = dadosIndicador.ganhosPorIndicacao || 0;
+
+        const comissao = valorPagoReais * 0.10; // 🔥 10% de comissão
+        const novoTotal = ganhosAtuais + comissao;
+
+        await updateDoc(indicadorRef, {
+          ganhosPorIndicacao: novoTotal,
+          historicoIndicacoes: [
+            ...(dadosIndicador.historicoIndicacoes || []),
+            {
+              indicadoUid: uid,
+              valorDepositado: valorPagoReais,
+              comissaoRecebida: comissao,
+              data: new Date().toISOString()
+            }
+          ]
+        });
+
+        console.log(`💰 Comissão de R$${comissao.toFixed(2)} adicionada ao indicador.`);
+      }
+    }
+
+    // ✅ Exibe alerta final
+    window.alert(`🎉 Recarga concluída! Seu saldo foi atualizado com R$${novoSaldo.toFixed(2)}`);
+  }
+}
+setMsgAguardandoPagamento(false);
+
+
 
         resetarEstado();
 
@@ -387,6 +434,12 @@ const resetarEstado = () => {
             <button onClick={() => navigator.clipboard.writeText(codigoPix)}>
               📋 Copiar Código Pix
             </button>
+            {msgAguardandoPagamento && (
+  <p style={{ color: "#888", marginTop: "10px" }}>
+    ⏳ Processando pagamento... Isso pode levar alguns segundos.
+  </p>
+)}
+
           </div>
         )}
 

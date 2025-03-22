@@ -4,6 +4,8 @@ import { doc, getDoc,updateDoc } from "firebase/firestore";
 import NavBar from "../Components/NavBar ";
 import { getAuthToken } from "../apiServices/AuthApi"; 
 import axios from "axios";
+import { cpf } from "cpf-cnpj-validator"; // no topo do arquivo
+
 
 // https://backend-proxy-6x3n.onrender.com/proxy/pagamento
 /***
@@ -55,6 +57,9 @@ const MeusPremios = () => {
   }, []);
   const handleSacar = async (premio) => {
     setLoadingSaque(true);
+    const valorAcumulado = premio.valorAcumulado || 0;
+const valorTotal = premio.valorPremio + valorAcumulado;
+
 
 
     try {
@@ -86,24 +91,28 @@ const MeusPremios = () => {
 
         // 🔥 Detectar automaticamente o tipo de chave Pix
         let pixKeyType;
+
         if (chavePix.includes("@")) {
-            pixKeyType = "email";
-        } else if (chavePix.match(/^\d{11}$/) && chavePix.startsWith("0") === false) {
-            pixKeyType = "cpf";
-        } else if (chavePix.match(/^\d{14}$/)) {
-            pixKeyType = "cnpj";
-        } else if (chavePix.match(/^\d{10,11}$/)) {
-            pixKeyType = "phone";
-        } else {
-            pixKeyType = "token";
-        }
+          pixKeyType = "email";
+      } else if (/^\d{14}$/.test(chavePix)) {
+          pixKeyType = "cnpj";
+      } else if (/^\d{11}$/.test(chavePix) && isValidCPF(chavePix)) {
+          pixKeyType = "cpf";
+      } else if (/^\d{10,11}$/.test(chavePix)) {
+          pixKeyType = "phone";
+      } else {
+          pixKeyType = "token";
+      }
+      
+        
+      
 
         // 🔥 Criando requisição de pagamento Pix
         const requestData = {
             initiation_type: "dict",
             idempotent_id: `SAQUE_${Date.now()}`,
             receiver_name: nome,
-            value_cents: premio.valorPremio * 100, // Convertendo para centavos
+            value_cents: valorTotal * 100,// Convertendo para centavos
             pix_key_type: pixKeyType,
             pix_key: chavePix,
             authorized: true
@@ -112,7 +121,8 @@ const MeusPremios = () => {
             //FALTA DE AUTORIZAÇAO
         };
 
-        setValorSaqueAtual(premio.valorPremio);
+        setValorSaqueAtual(valorTotal);
+
 
         // 🔥 Se a chave for CPF ou CNPJ, adicionamos receiver_document
         if (pixKeyType === "cpf" || pixKeyType === "cnpj") {
@@ -177,6 +187,24 @@ const MeusPremios = () => {
         }
     }
 };
+
+function isValidCPF(cpf) {
+  cpf = cpf.replace(/[^\d]+/g, '');
+  if (cpf.length !== 11 || /^(\d)\1+$/.test(cpf)) return false;
+
+  let sum = 0;
+  for (let i = 0; i < 9; i++) sum += parseInt(cpf.charAt(i)) * (10 - i);
+  let rev = 11 - (sum % 11);
+  if (rev === 10 || rev === 11) rev = 0;
+  if (rev !== parseInt(cpf.charAt(9))) return false;
+
+  sum = 0;
+  for (let i = 0; i < 10; i++) sum += parseInt(cpf.charAt(i)) * (11 - i);
+  rev = 11 - (sum % 11);
+  if (rev === 10 || rev === 11) rev = 0;
+  return rev === parseInt(cpf.charAt(10));
+}
+
 
 
   const verificarPagamentoSaque = async (referenceCode, sorteioId,valorPremio) => {
@@ -260,6 +288,9 @@ const MeusPremios = () => {
 
 
 const handleAdicionarSaldo = async (premio) => {
+  const valorAcumulado = premio.valorAcumulado || 0;
+const valorTotal = premio.valorPremio + valorAcumulado;
+
   try {
     const user = auth.currentUser;
     if (!user) {
@@ -277,7 +308,8 @@ const handleAdicionarSaldo = async (premio) => {
 
     const userData = userSnap.data();
     const saldoAtual = userData.saldo || 0;
-    const novoSaldo = saldoAtual + premio.valorPremio;
+    const novoSaldo = saldoAtual + valorTotal;
+
 
     console.log(`💰 Adicionando prêmio ao saldo: ${saldoAtual} ➡️ ${novoSaldo}`);
 
@@ -296,8 +328,9 @@ const handleAdicionarSaldo = async (premio) => {
       prevPremios.filter(p => p.sorteioId !== premio.sorteioId)
     );
 
-    console.log(`✅ Prêmio de R$${premio.valorPremio},00 adicionado ao saldo!`);
-    alert(`✅ R$${premio.valorPremio},00 foi adicionado ao seu saldo com sucesso!`);
+    console.log(`✅ Prêmio total de R$${valorTotal},00 adicionado ao saldo!`);
+    alert(`✅ R$${valorTotal},00 foi adicionado ao seu saldo com sucesso!`);
+    
   } catch (error) {
     console.error("❌ Erro ao adicionar prêmio ao saldo:", error);
     alert("❌ Erro ao adicionar saldo. Verifique o console.");
@@ -369,9 +402,24 @@ const handleAdicionarSaldo = async (premio) => {
                 <p style={{ fontSize: "14px", color: "#666" }}>
                   🎟️ Cartela: <strong>{premio.cartelaId}</strong>
                 </p>
-                <p style={{ fontSize: "14px", color: "#666" }}>
-                  💰 Valor: <strong>R$ {premio.valorPremio},00</strong>
-                </p>
+                {(() => {
+  const acumulado = premio.valorAcumulado || 0;
+  const total = premio.valorPremio + acumulado;
+
+  return (
+    <>
+      <p style={{ fontSize: "14px", color: "#666" }}>
+        💰 Valor: <strong>R$ {total},00</strong>
+      </p>
+      {acumulado > 0 && (
+        <p style={{ fontSize: "13px", color: "#999" }}>
+          🔄 Inclui R$ {acumulado},00 de acumulado
+        </p>
+      )}
+    </>
+  );
+})()}
+
                 <p style={{ fontSize: "14px", color: "#666" }}>
                   📅 Data: <strong>{new Date(premio.data).toLocaleString("pt-BR", {
                     day: "2-digit",

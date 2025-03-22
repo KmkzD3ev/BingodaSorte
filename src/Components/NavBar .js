@@ -1,4 +1,6 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext,useEffect } from "react";
+import { collection, getDocs, query, where } from "firebase/firestore";
+import { db } from "../services/firebaseconection";
 import { useNavigate } from "react-router-dom";
 import { Menu, X, LogOut, CreditCard, ShoppingCart, Gift, UserPlus, List, Clock,Wallet } from "lucide-react"; 
 import "./NavBar.css"; 
@@ -10,7 +12,58 @@ import { UserContext } from "../contexts/UserContext";
 const NavBar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { user, saldo } = useContext(UserContext);
+  const [sorteioDisponivel, setSorteioDisponivel] = useState(false);
+
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const verificarSorteioDisponivel = async () => {
+      try {
+        const sorteiosRef = collection(db, "sorteios_agendados");
+        const q = query(sorteiosRef, where("status", "==", "pendente"));
+        const snapshot = await getDocs(q);
+  
+        if (snapshot.empty) {
+          setSorteioDisponivel(false);
+          return;
+        }
+  
+        let sorteioLiberado = false;
+  
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          const [h, m] = data.hora.split(":").map(Number);
+          const agora = new Date();
+          const horarioSorteio = new Date();
+          horarioSorteio.setHours(h, m, 0, 0);
+  
+          if (agora >= horarioSorteio) {
+            sorteioLiberado = true;
+          }
+        });
+  
+        setSorteioDisponivel(sorteioLiberado);
+  
+        // 🔥 Redirecionamento automático assim que liberar
+        if (sorteioLiberado) {
+          navigate("/PrincipalSorteio");
+        }
+  
+      } catch (err) {
+        console.error("🔥 Erro ao verificar sorteio:", err);
+      }
+    };
+  
+    // Verifica imediatamente ao montar
+    verificarSorteioDisponivel();
+  
+    // E continua verificando a cada 5 segundos
+    const interval = setInterval(verificarSorteioDisponivel, 5000);
+  
+    return () => clearInterval(interval);
+  }, []);
+  
+  
 
   const formatSaldo = (saldo) => {
     return saldo === 0 ? "0,00" : saldo.toFixed(2).replace(".", ",");
@@ -24,6 +77,17 @@ const NavBar = () => {
       console.error("Erro ao sair:", error);
     }
   };
+
+  const handleAcessarSorteio = () => {
+    if (!sorteioDisponivel) {
+      alert("⏳ O sorteio ainda não está disponível.");
+      return;
+    }
+  
+    navigate("/PrincipalSorteio");
+    setIsOpen(false);
+  };
+  
 
   return (
     <>
@@ -66,9 +130,16 @@ const NavBar = () => {
              <Wallet size={18} /> Recarregar
               </li>
 
-          <li onClick={() => { navigate("/PrincipalSorteio"); setIsOpen(false); }}>
-            <List size={18} /> Sorteio
-          </li>
+              <li
+  onClick={handleAcessarSorteio}
+  style={{
+    opacity: sorteioDisponivel ? 1 : 0.5,
+    cursor: sorteioDisponivel ? "pointer" : "not-allowed"
+  }}
+>
+  <List size={18} /> Sorteio
+</li>
+
           <li onClick={() => { navigate("/Historico"); setIsOpen(false); }}>
             <Clock size={18} /> Histórico de Sorteios
           </li>

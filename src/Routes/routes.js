@@ -11,6 +11,8 @@ import PrincipalSorteio from "../Pages/PrincipalSorteio";
 import HistoricoSorteios from "../Pages/HistoricoSorteios";
 import MeusPremios from "../Pages/MeusPremios";
 import CobrarPix from "../Pages/CobrarPix"
+import CompartilharLinkIndicacao from "../Components/CompartilharLinkIndicacao";
+import MinhasRecargas from "../Pages/MinhasRecargas";
 
 function AppRoutes() {
   return (
@@ -25,6 +27,8 @@ function AppRoutes() {
             <Route path="/Historico" element={<HistoricoSorteios />} />
             <Route path="/Premios" element={<MeusPremios />} />
             <Route path="/Recarregar" element={<CobrarPix />} />
+            <Route path="/MinhasRecargas" element={<MinhasRecargas />} />
+            <Route path="/IndicarAmigo" element={<CompartilharLinkIndicacao />} />
           </Routes>
         </Router>
       </BingoProvider>
