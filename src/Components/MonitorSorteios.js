@@ -4,17 +4,17 @@ import { db } from "../services/firebaseconection";
 import { BingoContext } from "../contexts/BingoContext"; // 🔥 Envia o comando pelo Context API
 
 const MonitorSorteios = () => {
-  const { setSorteando, setIniciarSorteioExterno } = useContext(BingoContext);
+  const { setIniciarSorteioExterno } = useContext(BingoContext);
 
   useEffect(() => {
     const verificarSorteios = async () => {
       try {
         const agora = new Date();
-        const horaAtual = agora.getHours();
-        const minutosAtuais = agora.getMinutes();
-        const horaFormatada = `${horaAtual}:${minutosAtuais < 10 ? "0" : ""}${minutosAtuais}`; // Exemplo: "18:25"
+        const horaAtual = agora.getHours().toString().padStart(2, "0"); // Sempre 2 dígitos
+        const minutosAtuais = agora.getMinutes().toString().padStart(2, "0"); // Sempre 2 dígitos
+        const horaFormatada = `${horaAtual}:${minutosAtuais}`; // Exemplo: "19:50"
 
-        console.log(`🕒 Hora atual: ${horaFormatada}`);
+        console.log(`🕒 [Monitor] Hora atual: ${horaFormatada}`);
 
         const sorteiosRef = collection(db, "sorteios_agendados");
         const q = query(sorteiosRef, where("status", "==", "pendente"));
@@ -24,14 +24,23 @@ const MonitorSorteios = () => {
 
         snapshot.forEach((doc) => {
           const dados = doc.data();
-          if (dados.hora === horaFormatada) {
+          
+          // 🔍 Log detalhado para depuração
+          console.log(`📌 Firestore: { hora: "${dados.hora}", status: "${dados.status}" }`);
+          console.log(`📌 Comparando Firestore "${String(dados.hora).trim()}" com "${horaFormatada}"`);
+
+          // 🔥 Comparação corrigida (removendo espaços e garantindo string)
+          if (String(dados.hora).trim().replace(/\s/g, '') === horaFormatada) { 
+            console.log("✅ Sorteio correspondente encontrado! Hora:", dados.hora);
             sorteioEncontrado = { id: doc.id, ...dados };
           }
         });
 
         if (sorteioEncontrado) {
-          console.log("🎉 Sorteio encontrado! Enviando comando para iniciar...");
+          alert(`🎉 Sorteio das ${sorteioEncontrado.hora} encontrado! Iniciando...`);
           iniciarSorteioAutomatico(sorteioEncontrado);
+        } else {
+          console.log("❌ Nenhum sorteio correspondente encontrado.");
         }
       } catch (error) {
         console.error("🔥 Erro ao verificar sorteios:", error);
@@ -46,10 +55,11 @@ const MonitorSorteios = () => {
   }, []);
 
   const iniciarSorteioAutomatico = async (sorteio) => {
-    console.log(`✅ Iniciando sorteio das ${sorteio.hora}`);
-
+    console.log(`🚀 Iniciando sorteio das ${sorteio.hora}...`);
+    
     // 🔥 Envia um comando para `Sorteio.js` iniciar automaticamente
     setIniciarSorteioExterno(true);
+    console.log("🔁 [Monitor] Comando enviado para iniciar o sorteio.");
 
     // 🔥 Atualiza Firestore para evitar repetição
     const sorteioRef = doc(db, "sorteios_agendados", sorteio.id);

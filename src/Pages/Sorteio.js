@@ -13,6 +13,8 @@ import { auth } from "../services/firebaseconection"; // ðŸ”¥ Importa autenticaÃ
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Vencedores from "../Components/Vencedores";
+import MonitorSorteios from "../Components/MonitorSorteios";
+
 
 
 
@@ -672,6 +674,7 @@ const resetarSorteio = async () => {
   <div className="painel-info-container">
        <PainelInfo mostrarCartelas={true} className="painel-sorteio-ajuste"  
        />
+        <MonitorSorteios />
   
     <div className="sorteio-container">
 

@@ -1,62 +1,90 @@
 import React, { useState, useEffect } from "react";
 import { db } from "../services/firebaseconection";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, collection, query, where, getDocs } from "firebase/firestore";
 import "./SorteioPainel.css";
 
 const SorteioPainel = () => {
   const [sorteioData, setSorteioData] = useState(null);
   const [tempoRestante, setTempoRestante] = useState({ horas: "00", minutos: "00" });
+  const [horaAgendada, setHoraAgendada] = useState("00:00");
 
   useEffect(() => {
-    const buscarDadosSorteio = async () => {
+    const buscarDados = async () => {
       try {
-        const docRef = doc(db, "config", "dadosSorteio");
-        const docSnap = await getDoc(docRef);
-
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          setSorteioData(data);
-
-          localStorage.setItem("sorteioData", JSON.stringify(data));
-          console.log("✅ Dados do sorteio salvos no localStorage:", data);
-
-
-
-          iniciarContagemRegressiva(data.tempoMinutos);
-        } else {
-          console.log("❌ Nenhum dado encontrado no Firestore.");
+        // 1. Dados dos prêmios
+        const configRef = doc(db, "config", "dadosSorteio");
+        const configSnap = await getDoc(configRef);
+        if (configSnap.exists()) {
+          const dados = configSnap.data();
+          setSorteioData(dados);
+          console.log("✅ Dados do sorteio carregados:", dados);
         }
-      } catch (error) {
-        console.error("❌ Erro ao buscar dados do sorteio:", error);
+
+        // 2. Horário do próximo sorteio
+        const sorteiosRef = collection(db, "sorteios_agendados");
+        const q = query(sorteiosRef, where("status", "==", "pendente"));
+        const snapshot = await getDocs(q);
+
+        let horario = null;
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          if (data.hora) {
+            horario = data.hora;
+            console.log("🎯 Horário do sorteio encontrado:", horario);
+          }
+        });
+
+        if (horario) {
+          setHoraAgendada(horario);
+          iniciarContagemRegressiva(horario);
+        } else {
+          console.warn("⚠️ Nenhum horário pendente encontrado.");
+        }
+
+      } catch (e) {
+        console.error("❌ Erro ao buscar dados:", e);
       }
     };
 
-    buscarDadosSorteio();
+    buscarDados();
   }, []);
-
-  const iniciarContagemRegressiva = (tempoMinutos) => {
-    const fimDoSorteio = new Date();
-    fimDoSorteio.setMinutes(fimDoSorteio.getMinutes() + tempoMinutos);
-
-    const atualizarTempo = () => {
+  const iniciarContagemRegressiva = (hora) => {
+    const [h, m] = hora.split(":").map(Number);
+    const agora = new Date();
+    const sorteioDate = new Date();
+  
+    // Setando hora do sorteio
+    sorteioDate.setHours(h, m, 0, 0);
+  
+    // 🔥 Se a hora do sorteio for anterior ao agora, significa que é no próximo dia
+    if (sorteioDate <= agora) {
+      sorteioDate.setDate(sorteioDate.getDate() + 1);
+      console.log("📆 Ajustando para o dia seguinte:", sorteioDate.toLocaleString());
+    }
+  
+    console.log("🕒 Agora:", agora.toLocaleTimeString());
+    console.log("🕕 Horário do sorteio:", sorteioDate.toLocaleTimeString());
+  
+    const atualizar = () => {
       const agora = new Date();
-      const diferenca = fimDoSorteio - agora;
-
-      if (diferenca <= 0) {
+      const diff = sorteioDate - agora;
+  
+      if (diff <= 0) {
         setTempoRestante({ horas: "00", minutos: "00" });
         return;
       }
-
-      const horas = String(Math.floor(diferenca / (1000 * 60 * 60))).padStart(2, "0");
-      const minutos = String(Math.floor((diferenca % (1000 * 60 * 60)) / (1000 * 60))).padStart(2, "0");
-
+  
+      const horas = String(Math.floor(diff / (1000 * 60 * 60))).padStart(2, "0");
+      const minutos = String(Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))).padStart(2, "0");
+  
       setTempoRestante({ horas, minutos });
     };
-
-    atualizarTempo();
-    const intervalo = setInterval(atualizarTempo, 1000);
+  
+    atualizar();
+    const intervalo = setInterval(atualizar, 1000);
     return () => clearInterval(intervalo);
   };
+  
 
   if (!sorteioData) {
     return <p>🔄 Carregando dados do sorteio...</p>;
@@ -64,7 +92,7 @@ const SorteioPainel = () => {
 
   return (
     <div className="painel-container">
-      {/* Relógio */}
+      {/* Contador */}
       <div className="relogio">
         <span className="numero">{tempoRestante.horas[0]}</span>
         <span className="numero">{tempoRestante.horas[1]}</span>
@@ -73,7 +101,7 @@ const SorteioPainel = () => {
         <span className="numero">{tempoRestante.minutos[1]}</span>
       </div>
 
-      {/* Informações abaixo do relógio */}
+      {/* Informações gerais */}
       <div className="info-container">
         <div className="info">
           <p>SORTEIO</p>
@@ -87,11 +115,11 @@ const SorteioPainel = () => {
         <div className="linha"></div>
         <div className="info">
           <p>HORA</p>
-          <span className="destaque"> 23:30</span>
+          <span className="destaque">{horaAgendada}</span>
         </div>
       </div>
 
-      {/* Lista de prêmios */}
+      {/* Prêmios */}
       <div className="premios">
         <div className="premio-item">
           <span className="premio-texto">🏆 1º PRÊMIO</span>

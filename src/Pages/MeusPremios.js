@@ -259,14 +259,51 @@ const MeusPremios = () => {
 };
 
 
-  const handleAdicionarSaldo = (premio) => {
-    console.log("Adicionar ao saldo prêmio:", premio);
-    // Implemente a lógica para adicionar saldo aqui
+const handleAdicionarSaldo = async (premio) => {
+  try {
+    const user = auth.currentUser;
+    if (!user) {
+      console.log("⚠️ Nenhum usuário autenticado.");
+      return;
+    }
 
+    const userRef = doc(db, "usuarios", user.uid);
+    const userSnap = await getDoc(userRef);
 
+    if (!userSnap.exists()) {
+      console.log("❌ Usuário não encontrado no Firestore.");
+      return;
+    }
 
+    const userData = userSnap.data();
+    const saldoAtual = userData.saldo || 0;
+    const novoSaldo = saldoAtual + premio.valorPremio;
 
-  };
+    console.log(`💰 Adicionando prêmio ao saldo: ${saldoAtual} ➡️ ${novoSaldo}`);
+
+    // 🔥 Atualizando Firestore (saldo + marcar prêmio como sacado)
+    let premiosAtualizados = userData.premios.map(p =>
+      p.sorteioId === premio.sorteioId ? { ...p, status: "sacado" } : p
+    );
+
+    await updateDoc(userRef, {
+      saldo: novoSaldo,
+      premios: premiosAtualizados
+    });
+
+    // 🔥 Remove o prêmio da interface
+    setPremios((prevPremios) =>
+      prevPremios.filter(p => p.sorteioId !== premio.sorteioId)
+    );
+
+    console.log(`✅ Prêmio de R$${premio.valorPremio},00 adicionado ao saldo!`);
+    alert(`✅ R$${premio.valorPremio},00 foi adicionado ao seu saldo com sucesso!`);
+  } catch (error) {
+    console.error("❌ Erro ao adicionar prêmio ao saldo:", error);
+    alert("❌ Erro ao adicionar saldo. Verifique o console.");
+  }
+};
+
 
 
 
@@ -359,9 +396,19 @@ const MeusPremios = () => {
     <button onClick={() => handleSacar(premio)} style={{ padding: "6px 12px", background: "#28a745", color: "#fff", border: "none", borderRadius: "5px", cursor: "pointer" }}>
       Sacar
     </button>
-    <button onClick={() => console.log("Adicionar ao saldo:", premio)} style={{ padding: "6px 12px", background: "#007bff", color: "#fff", border: "none", borderRadius: "5px", cursor: "pointer" }}>
-      Adc ao saldo
-    </button>
+    <button 
+    onClick={() => handleAdicionarSaldo(premio)} 
+    style={{ 
+      padding: "6px 12px", 
+      background: "#007bff", 
+      color: "#fff", 
+      border: "none", 
+      borderRadius: "5px", 
+      cursor: "pointer" 
+    }}
+  >
+    Adc ao saldo
+  </button>
   </div>
 )}
 
