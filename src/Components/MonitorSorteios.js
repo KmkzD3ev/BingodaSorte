@@ -37,7 +37,7 @@ const MonitorSorteios = () => {
         });
 
         if (sorteioEncontrado) {
-          alert(`🎉 Sorteio das ${sorteioEncontrado.hora} encontrado! Iniciando...`);
+          //alert(`🎉 Sorteio das ${sorteioEncontrado.hora} encontrado! Iniciando...`);
           iniciarSorteioAutomatico(sorteioEncontrado);
         } else {
           console.log("❌ Nenhum sorteio correspondente encontrado.");

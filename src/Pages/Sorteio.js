@@ -428,6 +428,8 @@ const sortearNumero = async () => {
       console.log("✅ Sorteio finalizado salvo no Firebase:", idSorteio);
 
       await resetarSorteio();
+      await deletarTodasCartelas();
+
 
 
     } catch (error) {
@@ -662,6 +664,27 @@ const resetarSorteio = async () => {
     alert("Erro ao resetar sorteio. Verifique o console.");
   }
 };
+const deletarTodasCartelas = async () => {
+  console.log("🧪 [DEBUG] deletarTodasCartelas foi chamada");
+
+  try {
+    const snapshot = await getDocs(collectionGroup(db, "userCartelas"));
+
+    if (snapshot.empty) {
+      console.log("📭 Nenhuma cartela encontrada na subcoleção 'userCartelas'.");
+      return;
+    }
+
+    const deletarCartelas = snapshot.docs.map((doc) => deleteDoc(doc.ref));
+    await Promise.all(deletarCartelas);
+
+    console.log("🧹 Todas as cartelas da subcoleção 'userCartelas' foram deletadas!");
+  } catch (error) {
+    console.error("🔥 Erro ao deletar cartelas:", error);
+  }
+};
+
+
 
 
   

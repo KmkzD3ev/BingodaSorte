@@ -1,3 +1,4 @@
+// Cadastro.js
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Cadastro.css";
@@ -14,6 +15,7 @@ const Cadastro = () => {
     email: "",
     senha: "",
     chavePix: "",
+    tipoPix: "cpf",
     idade: "",
   });
 
@@ -21,13 +23,26 @@ const Cadastro = () => {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  // Função para gerar um CPF aleatório (caso necessário)
-  const gerarCPF = () => {
-    return Math.floor(10000000000 + Math.random() * 90000000000).toString();
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    let newValue = value;
+
+    if (name === "chavePix" && formData.tipoPix === "phone") {
+      if (!newValue.startsWith("+55")) {
+        newValue = "+55" + newValue.replace(/^\+?55/, "");
+      }
+    }
+
+    setFormData({ ...formData, [name]: newValue });
   };
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleTipoPixChange = (e) => {
+    const tipo = e.target.value;
+    let chave = formData.chavePix;
+    if (tipo === "phone" && !chave.startsWith("+55")) {
+      chave = "+55" + chave.replace(/^\+?55/, "");
+    }
+    setFormData({ ...formData, tipoPix: tipo, chavePix: chave });
   };
 
   const handleSubmit = async (e) => {
@@ -36,35 +51,32 @@ const Cadastro = () => {
     setError("");
 
     try {
-      // 🔹 Criar usuário no Firebase Authentication
       const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.senha);
       const user = userCredential.user;
       const refUid = new URLSearchParams(window.location.search).get("ref");
 
-
-      // 🔹 Criar documento no Firestore para armazenar os dados do usuário
       await setDoc(doc(db, "usuarios", user.uid), {
         uid: user.uid,
         nome: formData.nome,
         email: formData.email,
         chavePix: formData.chavePix,
+        tipoPix: formData.tipoPix,
         idade: formData.idade,
-        cpf: null, // 🔹 Gerando CPF automaticamente
+        cpf: null,
         saldo: 0.00,
         depositoPix: [],
         saquePix: [],
         premios: [],
-        indicador: refUid || null ,
+        indicador: refUid || null,
       });
 
-      // 🔹 Criar uma coleção separada para armazenar cartelas
       const cartelasCollectionRef = collection(db, "cartelas", user.uid, "userCartelas");
       await setDoc(doc(cartelasCollectionRef, "init"), {
         message: "Coleção de cartelas criada para este usuário"
       });
 
       alert("Usuário cadastrado com sucesso!");
-      navigate("/home"); 
+      navigate("/home");
     } catch (err) {
       setError(err.message);
     }
@@ -98,6 +110,16 @@ const Cadastro = () => {
 
               <div className="input-group">
                 <input type="text" name="chavePix" placeholder="Chave Pix" value={formData.chavePix} onChange={handleChange} required />
+              </div>
+
+              <div className="input-group">
+                <select name="tipoPix" value={formData.tipoPix} onChange={handleTipoPixChange} required style={{ fontSize: '14px', padding: '5px' }}>
+                  <option value="cpf">CPF</option>
+                  <option value="cnpj">CNPJ</option>
+                  <option value="email">Email</option>
+                  <option value="phone">Telefone</option>
+                  <option value="token">Chave Aleatória</option>
+                </select>
               </div>
 
               <div className="input-group">

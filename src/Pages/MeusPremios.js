@@ -55,6 +55,9 @@ const MeusPremios = () => {
 
     buscarPremios();
   }, []);
+
+
+
   const handleSacar = async (premio) => {
     setLoadingSaque(true);
     const valorAcumulado = premio.valorAcumulado || 0;
@@ -81,30 +84,24 @@ const valorTotal = premio.valorPremio + valorAcumulado;
 
         const userData = userSnap.data();
         const chavePix = userData.chavePix;
-        const cpf = userData.cpf;
-        const nome = userData.nome;
+          const pixKeyType = userData.tipoPix; // 🔥 Usa direto o tipo salvo no cadastro
+           const cpf = userData.cpf;
+             const nome = userData.nome;
+
+if (!chavePix || !pixKeyType || !nome) {
+    console.log("❌ Dados do usuário incompletos para saque.");
+    return;
+}
+
 
         if (!chavePix || !nome) {
             console.log("❌ Dados do usuário incompletos para saque.");
             return;
         }
 
-        // 🔥 Detectar automaticamente o tipo de chave Pix
-        let pixKeyType;
-
-        if (chavePix.includes("@")) {
-          pixKeyType = "email";
-      } else if (/^\d{14}$/.test(chavePix)) {
-          pixKeyType = "cnpj";
-      } else if (/^\d{11}$/.test(chavePix) && isValidCPF(chavePix)) {
-          pixKeyType = "cpf";
-      } else if (/^\d{10,11}$/.test(chavePix)) {
-          pixKeyType = "phone";
-      } else {
-          pixKeyType = "token";
-      }
-      
-        
+    // 🔥 Detectar automaticamente o tipo de chave Pix
+   
+    
       
 
         // 🔥 Criando requisição de pagamento Pix
