@@ -22,7 +22,9 @@ const [sorteioSelecionado, setSorteioSelecionado] = useState(null);
         const agendadosRef = collection(db, "sorteios_agendados");
         const agendadosSnap = await getDocs(agendadosRef);
 
-        const listaFinalizados = finalizadosSnap.docs.map((doc) => {
+        const listaFinalizados = finalizadosSnap.docs
+        .filter((doc) => Array.isArray(doc.data().vencedores) && doc.data().vencedores.length > 0)
+        .map((doc) => {
           const data = doc.data();
           return {
             idSorteio: data.idSorteio || "ID Desconhecido",
@@ -33,20 +35,25 @@ const [sorteioSelecionado, setSorteioSelecionado] = useState(null);
               hour: "2-digit",
               minute: "2-digit",
             }),
-            vencedores: Array.isArray(data.vencedores) ? data.vencedores : [],
+            vencedores: data.vencedores,
             status: "finalizado",
           };
         });
+      
+        
 
-        const listaAgendados = agendadosSnap.docs.map((doc) => {
+        const listaAgendados = agendadosSnap.docs
+        .filter((doc) => doc.data().status === "pendente")
+        .map((doc) => {
           const data = doc.data();
           return {
             idSorteio: doc.id,
             dataFormatada: `Hoje às ${data.hora || "--:--"}`,
             vencedores: [],
-            status: data.status || "pendente",
+            status: "pendente",
           };
         });
+      
 
         // Junta as duas listas (agendados primeiro, ou troque a ordem se quiser)
         const todosSorteios = [...listaAgendados, ...listaFinalizados];
