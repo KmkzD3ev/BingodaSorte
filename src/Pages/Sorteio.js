@@ -45,6 +45,18 @@ const Sorteio = () => {
   const [mostrarVencedores, setMostrarVencedores] = useState(false); 
   const [exibindoVencedores, setExibindoVencedores] = useState(false); 
 
+
+  useEffect(() => {
+    const sorteioRef = doc(db, "sorteio", "atual");
+    
+    updateDoc(sorteioRef, { executandoNoFrontend: true });
+  
+    return () => {
+      updateDoc(sorteioRef, { executandoNoFrontend: false });
+    };
+  }, []);
+  
+
   useEffect(() => {
     if (iniciarSorteioExterno) {
       console.log("🚀 Iniciando sorteio automaticamente via MonitorSorteios!");
