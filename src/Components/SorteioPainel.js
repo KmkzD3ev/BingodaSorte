@@ -5,7 +5,11 @@ import "./SorteioPainel.css";
 
 const SorteioPainel = () => {
   const [sorteioData, setSorteioData] = useState(null);
-  const [tempoRestante, setTempoRestante] = useState({ horas: "00", minutos: "00" });
+  const [tempoRestante, setTempoRestante] = useState({
+    horas: "00",
+    minutos: "00",
+    segundos: "00" 
+  });
   const [horaAgendada, setHoraAgendada] = useState("00:00");
 
   useEffect(() => {
@@ -68,17 +72,19 @@ const SorteioPainel = () => {
     const atualizar = () => {
       const agora = new Date();
       const diff = sorteioDate - agora;
-  
+    
       if (diff <= 0) {
-        setTempoRestante({ horas: "00", minutos: "00" });
+        setTempoRestante({ horas: "00", minutos: "00", segundos: "00" }); // ⬅️ AQUI
         return;
       }
-  
+    
       const horas = String(Math.floor(diff / (1000 * 60 * 60))).padStart(2, "0");
       const minutos = String(Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))).padStart(2, "0");
-  
-      setTempoRestante({ horas, minutos });
+      const segundos = String(Math.floor((diff % (1000 * 60)) / 1000)).padStart(2, "0");
+    
+      setTempoRestante({ horas, minutos, segundos }); // ⬅️ AQUI
     };
+    
   
     atualizar();
     const intervalo = setInterval(atualizar, 1000);
@@ -94,12 +100,25 @@ const SorteioPainel = () => {
     <div className="painel-container">
       {/* Contador */}
       <div className="relogio">
-        <span className="numero">{tempoRestante.horas[0]}</span>
-        <span className="numero">{tempoRestante.horas[1]}</span>
-        <span className="dois-pontos">:</span>
-        <span className="numero">{tempoRestante.minutos[0]}</span>
-        <span className="numero">{tempoRestante.minutos[1]}</span>
-      </div>
+  {tempoRestante.horas !== "00" ? (
+    <>
+      <span className="numero">{tempoRestante.horas[0]}</span>
+      <span className="numero">{tempoRestante.horas[1]}</span>
+      <span className="dois-pontos">:</span>
+      <span className="numero">{tempoRestante.minutos[0]}</span>
+      <span className="numero">{tempoRestante.minutos[1]}</span>
+    </>
+  ) : (
+    <>
+      <span className="numero">{tempoRestante.minutos[0]}</span>
+      <span className="numero">{tempoRestante.minutos[1]}</span>
+      <span className="dois-pontos">:</span>
+      <span className="numero">{tempoRestante.segundos[0]}</span>
+      <span className="numero">{tempoRestante.segundos[1]}</span>
+    </>
+  )}
+</div>
+
 
       {/* Informações gerais */}
       <div className="info-container">
