@@ -14,6 +14,8 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Vencedores from "../Components/Vencedores";
 import MonitorSorteios from "../Components/MonitorSorteios";
+import { useNavigate } from "react-router-dom";
+
 
 
 
@@ -35,6 +37,8 @@ const Sorteio = () => {
   const [quadraSaiu, setQuadraSaiu] = useState(false);
   const [quinaSaiu, setQuinaSaiu] = useState(false);
   const [cartelaCheiaSaiu, setCartelaCheiaSaiu] = useState(false);
+  const navigate = useNavigate();
+
 
 
 
@@ -461,6 +465,11 @@ const sortearNumero = async () => {
           iniciado: false
         });
       }
+
+      setTimeout(() => {
+        navigate("/Home"); // redireciona para a home após 3 segundos
+      }, 3000);
+      
       
       
 
@@ -694,7 +703,7 @@ const resetarSorteio = async () => {
     });
 
     console.log("✅ Sorteio resetado com sucesso!");
-    alert("Sorteio resetado!");
+    //alert("Sorteio resetado!");
   } catch (error) {
     console.error("❌ Erro ao resetar sorteio:", error);
     alert("Erro ao resetar sorteio. Verifique o console.");

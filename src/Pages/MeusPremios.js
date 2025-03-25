@@ -107,7 +107,7 @@ if (!chavePix || !pixKeyType || !nome) {
         // 🔥 Criando requisição de pagamento Pix
         const requestData = {
             initiation_type: "dict",
-            idempotent_id: `SAQUE_${Date.now()}`,
+            idempotent_id: `SAQUE_${Date.now()}_${Math.floor(Math.random() * 100000)}`,
             receiver_name: nome,
             value_cents: valorTotal * 100,// Convertendo para centavos
             pix_key_type: pixKeyType,
