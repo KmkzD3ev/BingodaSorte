@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { db } from "../services/firebaseconection";
 import { collection, getDocs } from "firebase/firestore";
-import NavBar from "../Components/NavBar";
+import NavBar from "../Components/NavBar ";
 import CartelaCompraModal from "../Components/CartelaCompraModal";
 
 

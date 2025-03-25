@@ -5,7 +5,7 @@ import { db } from "../services/firebaseconection";
 import { collection, collectionGroup, getDocs, doc, getDoc,addDoc,onSnapshot, updateDoc, arrayUnion,deleteDoc} from "firebase/firestore";
 import responsiveVoice from "responsivevoice";
 import "./Sorteio.css";
-import NavBar from "../Components/NavBar";
+import NavBar from "../Components/NavBar ";
 import PainelInfo from "../Components/PainelInfo"
 import CartelasFaltantes from "../Cartelas/CartelasFaltantes";
 import CardsSorteio from "../Components/CardsSorteio";
@@ -455,9 +455,14 @@ const sortearNumero = async () => {
 
       await resetarSorteio();
       await deletarTodasCartelas();
-      await updateDoc(doc(db, "sorteio", "atual"), {
-        liberado: false,
-      });
+      const idReal = localStorage.getItem("idSorteioAgendado");
+      if (idReal) {
+        await updateDoc(doc(db, "sorteios_agendados", idReal), {
+          iniciado: false
+        });
+      }
+      
+      
 
 
 

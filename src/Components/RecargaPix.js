@@ -262,30 +262,30 @@ if (uid) {
     if (uidIndicador) {
       const indicadorRef = doc(db, "usuarios", uidIndicador);
       const indicadorSnap = await getDoc(indicadorRef);
-
+    
       if (indicadorSnap.exists()) {
         const dadosIndicador = indicadorSnap.data();
-        const ganhosAtuais = dadosIndicador.ganhosPorIndicacao || 0;
-
-        const comissao = valorPagoReais * 0.10; // 🔥 10% de comissão
-        const novoTotal = ganhosAtuais + comissao;
-
+    
+        const saldoAtual = dadosIndicador.saldo || 0;
+        const novoSaldo = saldoAtual + 10; // 💰 bônus fixo de R$10
+    
         await updateDoc(indicadorRef, {
-          ganhosPorIndicacao: novoTotal,
+          saldo: novoSaldo,
           historicoIndicacoes: [
             ...(dadosIndicador.historicoIndicacoes || []),
             {
               indicadoUid: uid,
               valorDepositado: valorPagoReais,
-              comissaoRecebida: comissao,
+              bonusRecebido: 10,
               data: new Date().toISOString()
             }
           ]
         });
-
-        console.log(`💰 Comissão de R$${comissao.toFixed(2)} adicionada ao indicador.`);
+    
+        console.log(`💰 Bônus fixo de R$10 adicionado ao saldo do indicador.`);
       }
     }
+    
 
     // ✅ Exibe alerta final
     window.alert(`🎉 Recarga concluída! Seu saldo foi atualizado com R$${novoSaldo.toFixed(2)}`);

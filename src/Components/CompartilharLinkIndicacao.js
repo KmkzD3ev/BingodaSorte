@@ -32,7 +32,7 @@ const CompartilharLinkIndicacao = () => {
         <h2 style={{ textAlign: "center", marginBottom: "20px" }}>📲 Indique e Ganhe</h2>
 
         <p style={{ textAlign: "center", fontSize: "16px" }}>
-          Copie e compartilhe o link abaixo com seus amigos. Ao se cadastrarem, você poderá ganhar bônus pelas recargas deles! 🎁
+        Atenção! Indique um amigo e receba R$ 10,00 em bônus assim que ele fizer a primeira recarga. 🎱🔴
         </p>
 
         <div style={{

@@ -1,5 +1,5 @@
 import { useEffect, useContext } from "react";
-import { collection, getDocs, query, where, updateDoc, doc } from "firebase/firestore";
+import { collection, getDocs, query, where, updateDoc, doc, } from "firebase/firestore";
 import { db } from "../services/firebaseconection";
 import { BingoContext } from "../contexts/BingoContext"; // 🔥 Envia o comando pelo Context API
 
@@ -33,6 +33,7 @@ const MonitorSorteios = () => {
           if (String(dados.hora).trim().replace(/\s/g, '') === horaFormatada) { 
             console.log("✅ Sorteio correspondente encontrado! Hora:", dados.hora);
             sorteioEncontrado = { id: doc.id, ...dados };
+            localStorage.setItem("idSorteioAgendado", doc.id); 
           }
         });
 
@@ -56,18 +57,25 @@ const MonitorSorteios = () => {
 
   const iniciarSorteioAutomatico = async (sorteio) => {
     console.log(`🚀 Iniciando sorteio das ${sorteio.hora}...`);
-    
-    // 🔥 Envia um comando para `Sorteio.js` iniciar automaticamente
+  
     setIniciarSorteioExterno(true);
     console.log("🔁 [Monitor] Comando enviado para iniciar o sorteio.");
-
-    // 🔥 Atualiza Firestore para evitar repetição
+  
     const sorteioRef = doc(db, "sorteios_agendados", sorteio.id);
-    await updateDoc(sorteioRef, { status: "executado" });
+  
+    const iniciado = true;
+  
+    await updateDoc(sorteioRef, {
+      status: "executado",
+      iniciado: iniciado,
+      finalizado: false
+    });
+  
+    console.log(`✅ Sorteio das ${sorteio.hora} marcado como executado e iniciado.`);
+    console.log("✅ Sorteio iniciado: marcado como 'executado' e 'iniciado'");
 
-    console.log(`✅ Sorteio das ${sorteio.hora} marcado como concluído.`);
   };
-
+  
   return null; // ✅ Esse componente não renderiza nada, só monitora
 };
 
