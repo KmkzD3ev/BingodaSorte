@@ -1,11 +1,11 @@
-import React, { useEffect, useState, useContext,useCallback } from "react";
+import React, { useEffect, useState, useContext,useCallback,useRef} from "react";
 import { BingoContext } from "../contexts/BingoContext";
 import { UserContext } from "../contexts/UserContext"; 
 import { db } from "../services/firebaseconection";
 import { collection, collectionGroup, getDocs, doc, getDoc,addDoc,onSnapshot, updateDoc, arrayUnion,deleteDoc} from "firebase/firestore";
 import responsiveVoice from "responsivevoice";
 import "./Sorteio.css";
-import NavBar from "../Components/NavBar ";
+import NavBar from "../Components/NavBar";
 import PainelInfo from "../Components/PainelInfo"
 import CartelasFaltantes from "../Cartelas/CartelasFaltantes";
 import CardsSorteio from "../Components/CardsSorteio";
@@ -17,7 +17,8 @@ import MonitorSorteios from "../Components/MonitorSorteios";
 
 
 
-
+let sorteioIdGlobal = null;
+let dataSorteioGlobal = null;
 
 const Sorteio = () => {
   const { numerosSorteados, setNumerosSorteados, sorteando, setSorteando, numeroAtual, setNumeroAtual,iniciarSorteioExterno, setIniciarSorteioExterno } =
@@ -35,6 +36,8 @@ const Sorteio = () => {
   const [quinaSaiu, setQuinaSaiu] = useState(false);
   const [cartelaCheiaSaiu, setCartelaCheiaSaiu] = useState(false);
 
+
+
   const [coresBolas, setCoresBolas] = useState({
     numeroAtual: "#ffcc00",  // Cor inicial da bola maior
     bolaPequena1: "#ff5733", // Cor inicial da primeira bola menor
@@ -44,6 +47,16 @@ const Sorteio = () => {
 
   const [mostrarVencedores, setMostrarVencedores] = useState(false); 
   const [exibindoVencedores, setExibindoVencedores] = useState(false); 
+
+  useEffect(() => {
+    // 🔥 Garante que sorteioId e data sejam gerados apenas uma vez
+    if (!sorteioIdGlobal) {
+      sorteioIdGlobal = Date.now().toString();
+      dataSorteioGlobal = new Date().toISOString();
+      console.log("📌 ID de Sorteio fixado:", sorteioIdGlobal);
+    }
+  }, []);
+
 
 
   useEffect(() => {
@@ -425,22 +438,26 @@ const sortearNumero = async () => {
     if (vencedores.length === 0) return; // 🔥 Não salva se não houver vencedores
   
     try {
-      const idSorteio = Date.now().toString(); // 🔥 Usa timestamp como identificador único
+      
   
       await addDoc(collection(db, "Sorteios Finalizados"), {
-        idSorteio: idSorteio,
+        sorteioId: sorteioIdGlobal,
+        data: dataSorteioGlobal,
         vencedores: vencedores.map((v) => ({
           usuario: v.userName,
           cartela: v.cartelaId,
           tipo: v.tipo,
         })),
-        data: new Date().toISOString(), // 🔥 Registra a data do sorteio
+       
       });
   
-      console.log("✅ Sorteio finalizado salvo no Firebase:", idSorteio);
+      console.log("✅ Sorteio finalizado salvo no Firebase:",sorteioIdGlobal );
 
       await resetarSorteio();
       await deletarTodasCartelas();
+      await updateDoc(doc(db, "sorteio", "atual"), {
+        liberado: false,
+      });
 
 
 
@@ -557,12 +574,13 @@ const sortearNumero = async () => {
             // 🔥 Tenta atualizar o Firestore
             await updateDoc(userRef, {
                 premios: arrayUnion({
-                    sorteioId: Date.now().toString(),
+                  sorteioId:  sorteioIdGlobal,
+                  data: dataSorteioGlobal,
                     tipo: vencedor.tipo,
                     cartelaId: vencedor.cartelaId,
                     valorPremio: valorPremio,
                     valorAcumulado: ganhouAcumulado ? valorAcumulado : 0,
-                    data: new Date().toISOString(),
+                    
                 }),
             });
 

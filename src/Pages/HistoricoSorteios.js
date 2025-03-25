@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { db } from "../services/firebaseconection";
 import { collection, getDocs } from "firebase/firestore";
-import NavBar from "../Components/NavBar ";
+import NavBar from "../Components/NavBar";
 import CartelaCompraModal from "../Components/CartelaCompraModal";
 
 
@@ -27,7 +27,7 @@ const [sorteioSelecionado, setSorteioSelecionado] = useState(null);
         .map((doc) => {
           const data = doc.data();
           return {
-            idSorteio: data.idSorteio || "ID Desconhecido",
+            idSorteio: data.sorteioId || doc.id,
             dataFormatada: new Date(data.data).toLocaleString("pt-BR", {
               day: "2-digit",
               month: "2-digit",
