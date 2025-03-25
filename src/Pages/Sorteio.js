@@ -492,7 +492,8 @@ const sortearNumero = async () => {
         }
 
         // 🔥 Recupera os valores do sorteio (incluindo acumulado)
-        const sorteioData = JSON.parse(localStorage.getItem('sorteioData') || '{}');
+        const sorteioData = JSON.parse(localStorage.getItem('dadosSorteio') || '{}');
+
 
         console.log("📌 Valores do Sorteio Recuperados:", sorteioData);
 

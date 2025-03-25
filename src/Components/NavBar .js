@@ -13,6 +13,8 @@ const NavBar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { user, saldo } = useContext(UserContext);
   const [sorteioDisponivel, setSorteioDisponivel] = useState(false);
+  const [liberadoRecentemente, setLiberadoRecentemente] = useState(false);
+
 
   const navigate = useNavigate();
 
@@ -37,37 +39,53 @@ const NavBar = () => {
           const horarioSorteio = new Date();
           horarioSorteio.setHours(h, m, 0, 0);
   
-          if (agora >= horarioSorteio) {
+          const diffMinutos = (agora - horarioSorteio) / 60000;
+  
+          if (diffMinutos >= 0 && diffMinutos <= 1) {
             sorteioLiberado = true;
           }
         });
   
-        setSorteioDisponivel(sorteioLiberado);
+        const agoraTimestamp = Date.now();
+        const liberadoAte = parseInt(localStorage.getItem("liberadoAte") || "0", 10);
   
-        // 🔥 Redirecionamento automático assim que liberar
-        if (sorteioLiberado) {
+        // Só seta o localStorage se estiver liberado e não houver janela válida já aberta
+        if (sorteioLiberado && agoraTimestamp > liberadoAte) {
+          localStorage.setItem("liberadoAte", (agoraTimestamp + 60000).toString()); // janela de 1 minuto
+          setLiberadoRecentemente(true);
           navigate("/PrincipalSorteio");
         }
   
+        setSorteioDisponivel(sorteioLiberado);
       } catch (err) {
         console.error("🔥 Erro ao verificar sorteio:", err);
       }
     };
   
-    // Verifica imediatamente ao montar
     verificarSorteioDisponivel();
-  
-    // E continua verificando a cada 5 segundos
     const interval = setInterval(verificarSorteioDisponivel, 5000);
-  
     return () => clearInterval(interval);
   }, []);
   
   
-
   const formatSaldo = (saldo) => {
     return saldo === 0 ? "0,00" : saldo.toFixed(2).replace(".", ",");
   };
+
+
+  useEffect(() => {
+    const verificarLiberacaoLocal = () => {
+      const liberadoAte = parseInt(localStorage.getItem("liberadoAte") || "0", 10);
+      const agora = Date.now();
+      setLiberadoRecentemente(agora <= liberadoAte);
+    };
+  
+    verificarLiberacaoLocal();
+    const interval = setInterval(verificarLiberacaoLocal, 1000); // checa a cada 1s
+  
+    return () => clearInterval(interval);
+  }, []);
+  
 
   const handleLogout = async () => {
     try {
@@ -78,15 +96,15 @@ const NavBar = () => {
     }
   };
 
-  const handleAcessarSorteio = () => {
-    if (!sorteioDisponivel) {
-      alert("⏳ O sorteio ainda não está disponível.");
-      return;
-    }
-  
-    navigate("/PrincipalSorteio");
-    setIsOpen(false);
-  };
+ const handleAcessarSorteio = () => {
+  if (!sorteioDisponivel && !liberadoRecentemente) {
+    alert("⏳ O sorteio ainda não está disponível.");
+    return;
+  }
+
+  navigate("/PrincipalSorteio");
+  setIsOpen(false);
+};
   
 
   return (
@@ -129,12 +147,11 @@ const NavBar = () => {
           <li onClick={() => { navigate("/Recarregar"); setIsOpen(false); }}>
              <Wallet size={18} /> Recarregar
               </li>
-
               <li
   onClick={handleAcessarSorteio}
   style={{
-    opacity: sorteioDisponivel ? 1 : 0.5,
-    cursor: sorteioDisponivel ? "pointer" : "not-allowed"
+    opacity: (sorteioDisponivel || liberadoRecentemente) ? 1 : 0.5,
+    cursor: (sorteioDisponivel || liberadoRecentemente) ? "pointer" : "not-allowed"
   }}
 >
   <List size={18} /> Sorteio

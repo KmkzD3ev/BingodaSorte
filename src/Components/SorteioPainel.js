@@ -21,6 +21,7 @@ const SorteioPainel = () => {
         if (configSnap.exists()) {
           const dados = configSnap.data();
           setSorteioData(dados);
+          localStorage.setItem("dadosSorteio", JSON.stringify(dados));
           console.log("✅ Dados do sorteio carregados:", dados);
         }
 

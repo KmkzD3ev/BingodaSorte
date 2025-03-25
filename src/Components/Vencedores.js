@@ -44,7 +44,7 @@ const Vencedores = ({ vencedores }) => {
         <p className="nenhum-vencedor">Nenhum vencedor ainda...</p>
       ) : (
         <ul className="lista-vencedores">
-          {vencedores.map((vencedor, index) => (
+         {visiveis.map((vencedor, index) => (
             <li key={index} className="vencedor-item">
               🎉 <strong>{vencedor.tipo}</strong> - {vencedor.userName}  
               <span className="cartela-info">(Cartela: {vencedor.cartelaId})</span>
