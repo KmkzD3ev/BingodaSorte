@@ -38,6 +38,10 @@ const Sorteio = () => {
   const [quinaSaiu, setQuinaSaiu] = useState(false);
   const [cartelaCheiaSaiu, setCartelaCheiaSaiu] = useState(false);
   const navigate = useNavigate();
+  const [mensagemInicial, setMensagemInicial] = useState(true);
+  const [acumuladoPago, setAcumuladoPago] = useState(false);
+
+
 
 
 
@@ -78,21 +82,25 @@ const Sorteio = () => {
     if (iniciarSorteioExterno) {
       console.log("🚀 Iniciando sorteio automaticamente via MonitorSorteios!");
   
-      // 🔥 Reseta todos os estados necessários
-      setSorteando(true);  // Ativa o sorteio
-      setNumerosSorteados([]);  // Reseta os números sorteados
-      setNumeroAtual(null);  // Reseta o último número sorteado
-      setVencedores([]);  // Reseta a lista de vencedores
-      setQuadraSaiu(false);  // 🔥 Reseta flag da Quadra
-      setQuinaSaiu(false);  // 🔥 Reseta flag da Quina
-      setCartelaCheiaSaiu(false);  // 🔥 Reseta flag da Cartela Cheia
+      // 🔥 Reseta todos os estados necessários imediatamente
+      setSorteando(false); // Ainda não ativa sorteando
+      setNumerosSorteados([]);
+      setNumeroAtual(null);
+      setVencedores([]);
+      setQuadraSaiu(false);
+      setQuinaSaiu(false);
+      setCartelaCheiaSaiu(false);
+      
+      setMensagemInicial(true); // 🔥 Exibe a mensagem imediatamente
   
       setTimeout(() => {
         console.log("🎯 Iniciando primeiro número do sorteio...");
-        sortearNumero();  // 🔥 Chama a função para iniciar o sorteio automaticamente
-      }, 1000); // 🔥 Aguarda 1 segundo antes de iniciar o primeiro número
+        setMensagemInicial(false); // 🔥 Remove a mensagem após o delay
+        setSorteando(true); // 🔥 Agora ativa o sorteio
+        sortearNumero(); 
+      }, 8000); // 🔥 Aumentado para 10 segundos
   
-      setIniciarSorteioExterno(false);  // 🔥 Reseta o comando externo para evitar loops
+      setIniciarSorteioExterno(false);
     }
   }, [iniciarSorteioExterno]);
   
@@ -303,6 +311,7 @@ const sortearNumero = async () => {
     if (vencedorCartelaCheia) {
         novosVencedores.push(vencedorCartelaCheia);
         setCartelaCheiaSaiu(true);
+        setSorteando(false); 
     }
 
     if (novosVencedores.length > 0) {
@@ -393,7 +402,7 @@ const sortearNumero = async () => {
       }, 2000);
     }
     return () => clearInterval(interval);
-  }, [sorteando, numerosSorteados]);
+  },[sorteando, quadraSaiu, quinaSaiu, cartelaCheiaSaiu]);
 
   /*********************************************/
 
@@ -548,10 +557,13 @@ const sortearNumero = async () => {
             let ganhouAcumulado = false;
             let valorAcumulado = 0;
             
-            if (numerosSorteados.length >= sorteioData.quantidadeAcumulado) {
-                ganhouAcumulado = true;
-                valorAcumulado = sorteioData.acumulado || 0;
-            }
+            if (!acumuladoPago && numerosSorteados.length >= sorteioData.quantidadeAcumulado) {
+              ganhouAcumulado = true;
+              valorAcumulado = sorteioData.acumulado || 0;
+          
+              // Marca que o acumulado já foi pago nesse sorteio
+              setAcumuladoPago(true);
+          }
 
             // 🔥 Referência ao documento do usuário no Firestore
             const userRef = doc(db, "usuarios", vencedor.userId);
@@ -739,6 +751,8 @@ const deletarTodasCartelas = async () => {
 
   return (
     <div> 
+      {mensagemInicial && <div>🕒 O sorteio já vai começar...</div>}
+
   <div className="painel-info-container">
        <PainelInfo mostrarCartelas={true} className="painel-sorteio-ajuste"  
        />
