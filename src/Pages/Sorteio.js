@@ -39,8 +39,9 @@ const Sorteio = () => {
   const [cartelaCheiaSaiu, setCartelaCheiaSaiu] = useState(false);
   const navigate = useNavigate();
   const [mensagemInicial, setMensagemInicial] = useState(true);
-  const [acumuladoPago, setAcumuladoPago] = useState(false);
-
+  const acumuladoPago = useRef(false);
+  
+  
 
 
 
@@ -55,6 +56,14 @@ const Sorteio = () => {
 
   const [mostrarVencedores, setMostrarVencedores] = useState(false); 
   const [exibindoVencedores, setExibindoVencedores] = useState(false); 
+
+
+  const sorteandoRef = useRef(false);
+
+useEffect(() => {
+  sorteandoRef.current = sorteando;
+}, [sorteando]);
+
 
   useEffect(() => {
     // 🔥 Garante que sorteioId e data sejam gerados apenas uma vez
@@ -77,7 +86,6 @@ const Sorteio = () => {
     };
   }, []);
   
-
   useEffect(() => {
     if (iniciarSorteioExterno) {
       console.log("🚀 Iniciando sorteio automaticamente via MonitorSorteios!");
@@ -104,7 +112,6 @@ const Sorteio = () => {
     }
   }, [iniciarSorteioExterno]);
   
-
 
 
   useEffect(() => {
@@ -203,6 +210,13 @@ const recuperarNomesUsuarios = async (cartelas) => {
 };
 
 const sortearNumero = async () => {
+
+  if (!sorteando) {
+    console.log("🛑 Sorteio parado. Ignorando chamada de sortearNumero.");
+    return;
+  }
+
+
   // 🔴 Se os três prêmios saíram, finaliza o sorteio e salva
   if (quadraSaiu && quinaSaiu && cartelaCheiaSaiu) {
     setSorteando(false);
@@ -261,72 +275,77 @@ const sortearNumero = async () => {
   }, []);
   
   ///////////////////////////////////////////////
-  const verificarVencedores = () => {
-    if (quadraSaiu && quinaSaiu && cartelaCheiaSaiu) return; // 🔥 Se todos os prêmios já foram dados, sair imediatamente
-  
-    let vencedorQuadra = null;
-    let vencedorQuina = null;
-    let vencedorCartelaCheia = null;
-  
-    cartelas.forEach((cartela) => {
-        if (quadraSaiu && quinaSaiu && cartelaCheiaSaiu) return; // Se já saiu tudo, não precisa continuar
-  
-        const linhas = [
-            cartela.casas.slice(0, 5),
-            cartela.casas.slice(5, 10),
-            cartela.casas.slice(10, 15),
-            cartela.casas.slice(15, 20),
-            cartela.casas.slice(20, 25),
-        ];
+ const verificarVencedores = () => {
+  if (quadraSaiu && quinaSaiu && cartelaCheiaSaiu) return;
 
-        linhas.forEach((linha) => {
-            const marcadosNaLinha = linha.filter(num => cartela.marcados.includes(num)).length;
+  let vencedorQuadra = null;
+  let vencedorQuina = null;
+  let vencedorCartelaCheia = null;
 
-            if (!quadraSaiu && marcadosNaLinha === 4 && !vencedorQuadra) {
-                vencedorQuadra = { userName: cartela.userName, tipo: "Quadra", cartelaId: cartela.idNumerico, userId: cartela.userId };
-            }
+  cartelas.forEach((cartela) => {
+    const linhas = [
+      cartela.casas.slice(0, 5),
+      cartela.casas.slice(5, 10),
+      cartela.casas.slice(10, 15),
+      cartela.casas.slice(15, 20),
+      cartela.casas.slice(20, 25),
+    ];
 
-            if (!quinaSaiu && marcadosNaLinha === 5 && !vencedorQuina) {
-                vencedorQuina = { userName: cartela.userName, tipo: "Quina", cartelaId: cartela.idNumerico, userId: cartela.userId };
-            }
-        });
+    linhas.forEach((linha) => {
+      const marcadosNaLinha = linha.filter((num) => cartela.marcados.includes(num)).length;
 
-        if (!cartelaCheiaSaiu && cartela.marcados.length === 25 && !vencedorCartelaCheia) {
-            vencedorCartelaCheia = { userName: cartela.userName, tipo: "Cartela Cheia", cartelaId: cartela.idNumerico, userId: cartela.userId };
-        }
+      if (!quadraSaiu && marcadosNaLinha === 4 && !vencedorQuadra) {
+        vencedorQuadra = {
+          userName: cartela.userName,
+          tipo: "Quadra",
+          cartelaId: cartela.idNumerico,
+          userId: cartela.userId,
+        };
+      }
+
+      if (!quinaSaiu && marcadosNaLinha === 5 && !vencedorQuina) {
+        vencedorQuina = {
+          userName: cartela.userName,
+          tipo: "Quina",
+          cartelaId: cartela.idNumerico,
+          userId: cartela.userId,
+        };
+      }
     });
 
-    let novosVencedores = [];
-
-    if (vencedorQuadra) {
-        novosVencedores.push(vencedorQuadra);
-        setQuadraSaiu(true);
+    if (!cartelaCheiaSaiu && cartela.marcados.length === 25 && !vencedorCartelaCheia) {
+      vencedorCartelaCheia = {
+        userName: cartela.userName,
+        tipo: "Cartela Cheia",
+        cartelaId: cartela.idNumerico,
+        userId: cartela.userId,
+      };
     }
+  });
 
-    if (vencedorQuina) {
-        novosVencedores.push(vencedorQuina);
-        setQuinaSaiu(true);
-    }
+  const novosVencedores = [];
+  if (vencedorQuadra) novosVencedores.push(vencedorQuadra);
+  if (vencedorQuina) novosVencedores.push(vencedorQuina);
+  if (vencedorCartelaCheia) novosVencedores.push(vencedorCartelaCheia);
 
-    if (vencedorCartelaCheia) {
-        novosVencedores.push(vencedorCartelaCheia);
-        setCartelaCheiaSaiu(true);
-        setSorteando(false); 
-    }
+  if (novosVencedores.length > 0) {
+    setVencedores((prev) => {
+      const listaUnica = new Set([
+        ...prev.map((v) => JSON.stringify(v)),
+        ...novosVencedores.map((v) => JSON.stringify(v)),
+      ]);
+      const listaFinal = [...listaUnica].map((v) => JSON.parse(v));
 
-    if (novosVencedores.length > 0) {
-        setVencedores((prevVencedores) => {
-            const listaUnica = new Set([...prevVencedores.map(v => JSON.stringify(v)), ...novosVencedores.map(v => JSON.stringify(v))]);
-            return [...listaUnica].map(v => JSON.parse(v));
-        });
+      // 🔥 Chama aqui dentro para garantir que o estado foi deduplicado
+      salvarVitoriaUsuario(novosVencedores);
+      return listaFinal;
+    });
 
-
-
-        
-
-        salvarVitoriaUsuario(novosVencedores);
-        
-    }
+    // 🔥 Atualiza flags após garantir que o vencedor será tratado
+    if (novosVencedores.some((v) => v.tipo === "Quadra")) setQuadraSaiu(true);
+    if (novosVencedores.some((v) => v.tipo === "Quina")) setQuinaSaiu(true);
+    if (novosVencedores.some((v) => v.tipo === "Cartela Cheia")) setCartelaCheiaSaiu(true);
+  }
 };
 
  /* const verificarVencedores = () => {
@@ -402,7 +421,7 @@ const sortearNumero = async () => {
       }, 2000);
     }
     return () => clearInterval(interval);
-  },[sorteando, quadraSaiu, quinaSaiu, cartelaCheiaSaiu]);
+  }, [sorteando, numerosSorteados]);
 
   /*********************************************/
 
@@ -557,14 +576,12 @@ const sortearNumero = async () => {
             let ganhouAcumulado = false;
             let valorAcumulado = 0;
             
-            if (!acumuladoPago && numerosSorteados.length >= sorteioData.quantidadeAcumulado) {
+            if (!acumuladoPago.current && numerosSorteados.length >= sorteioData.quantidadeAcumulado) {
               ganhouAcumulado = true;
               valorAcumulado = sorteioData.acumulado || 0;
-          
-              // Marca que o acumulado já foi pago nesse sorteio
-              setAcumuladoPago(true);
+              acumuladoPago.current = true; // ✅ Marca imediatamente como pago
           }
-
+          
             // 🔥 Referência ao documento do usuário no Firestore
             const userRef = doc(db, "usuarios", vencedor.userId);
 
@@ -751,7 +768,26 @@ const deletarTodasCartelas = async () => {
 
   return (
     <div> 
-      {mensagemInicial && <div>🕒 O sorteio já vai começar...</div>}
+                    {mensagemInicial && (
+  <div
+    style={{
+      position: "absolute",
+      top: "20px",
+      left: "50%",
+      transform: "translateX(-50%)",
+      background: "#ffffff",
+      padding: "16px 24px",
+      borderRadius: "12px",
+      boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+      fontSize: "18px",
+      fontWeight: "bold",
+      color: "#333",
+      zIndex: 9999,
+    }}
+  >
+    🕒 O sorteio já vai começar...
+  </div>
+)}
 
   <div className="painel-info-container">
        <PainelInfo mostrarCartelas={true} className="painel-sorteio-ajuste"  
