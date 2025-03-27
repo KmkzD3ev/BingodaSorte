@@ -65,11 +65,11 @@ const MonitorSorteios = () => {
   
     const iniciado = true;
   
-    await updateDoc(sorteioRef, {
+    /*await updateDoc(sorteioRef, {
       status: "executado",
       iniciado: iniciado,
       finalizado: false
-    });
+    });*/
   
     console.log(`✅ Sorteio das ${sorteio.hora} marcado como executado e iniciado.`);
     console.log("✅ Sorteio iniciado: marcado como 'executado' e 'iniciado'");

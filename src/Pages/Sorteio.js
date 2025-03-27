@@ -40,7 +40,8 @@ const Sorteio = () => {
   const navigate = useNavigate();
   const [mensagemInicial, setMensagemInicial] = useState(true);
   const acumuladoPago = useRef(false);
-  const intervaloSorteio = useRef(null);
+
+  const sorteioFinalizado = useRef(false);
 
   
   
@@ -78,7 +79,7 @@ useEffect(() => {
 
 
 
-  useEffect(() => {
+  /*useEffect(() => {
     const sorteioRef = doc(db, "sorteio", "atual");
     
     updateDoc(sorteioRef, { executandoNoFrontend: true });
@@ -86,9 +87,9 @@ useEffect(() => {
     return () => {
       updateDoc(sorteioRef, { executandoNoFrontend: false });
     };
-  }, []);
+  }, []);*/
   
-  useEffect(() => {
+  /*useEffect(() => {
     if (iniciarSorteioExterno) {
       console.log("🚀 Iniciando sorteio automaticamente via MonitorSorteios!");
   
@@ -107,8 +108,22 @@ useEffect(() => {
         console.log("🎯 Iniciando primeiro número do sorteio...");
         setMensagemInicial(false); // 🔥 Remove a mensagem após o delay
         setSorteando(true); // 🔥 Agora ativa o sorteio
-        sortearNumero(); 
+        
       }, 8000); // 🔥 Aumentado para 10 segundos
+  
+      setIniciarSorteioExterno(false);
+    }
+  }, [iniciarSorteioExterno]);*/
+
+  useEffect(() => {
+    if (iniciarSorteioExterno) {
+      setMensagemInicial(true);
+      setSorteando(false); // evita início prematuro
+  
+      setTimeout(() => {
+        setMensagemInicial(false);
+        setSorteando(true); // ativa sorteio
+      }, 8000);
   
       setIniciarSorteioExterno(false);
     }
@@ -116,19 +131,32 @@ useEffect(() => {
   
 
 
-  useEffect(() => {
-    const sorteioRef = doc(db, "sorteio", "atual");
-  
-    const unsubscribe = onSnapshot(sorteioRef, (docSnapshot) => {
-      if (docSnapshot.exists()) {
-        const data = docSnapshot.data();
-        setNumerosSorteados(data.numerosSorteados || []);
-        setNumeroAtual(data.numeroAtual || null);
-      }
-    });
-  
-    return () => unsubscribe(); // 🔥 Remove o listener quando o componente desmonta
-  }, []);
+  // 🔥 Reage ao número vindo do backend
+useEffect(() => {
+  if (!numeroAtual || !sorteandoRef.current) return;
+
+  console.log("🟣 Novo número recebido do backend:", numeroAtual);
+
+  marcarNumeroNasCartelas(numeroAtual);
+  verificarVencedores();
+
+  if (quadraSaiu && quinaSaiu && cartelaCheiaSaiu) {
+    console.log("✅ Todos prêmios saíram. Finalizando sorteio...");
+    atualizarStatusExecutadoAgora();
+    setSorteando(false);
+    salvarSorteioFinalizado(vencedores);
+    
+  }
+
+  if (numerosSorteados.length >= 90 && !(quadraSaiu && quinaSaiu && cartelaCheiaSaiu)) {
+    console.warn("⚠️ 90 números e nenhum ganhador completo. Finalizando sorteio sem prêmios.");
+    setSorteando(false);
+    salvarSorteioFinalizado(vencedores);
+  }
+
+}, [numeroAtual, numerosSorteados, quadraSaiu, quinaSaiu, cartelaCheiaSaiu]);
+
+
   
 
   useEffect(() => {
@@ -212,61 +240,44 @@ const recuperarNomesUsuarios = async (cartelas) => {
 };
 
 const sortearNumero = async () => {
+  if (!sorteando || sorteioFinalizado) return;
 
-  if (!sorteando) {
-    console.log("🛑 Sorteio parado. Ignorando chamada de sortearNumero.");
-    return;
-  }
-
-
-  // 🔴 Se os três prêmios saíram, finaliza o sorteio e salva
   if (quadraSaiu && quinaSaiu && cartelaCheiaSaiu) {
-    console.log("🏁 Encerrando sorteio no sortearNumero");
-
-    // ⛔ PARA IMEDIATAMENTE
-    clearInterval(intervaloSorteio.current);
-    console.log("🛑 Intervalo encerrado manualmente");
+    sorteioFinalizado.current = true;
 
     setSorteando(false);
     await salvarSorteioFinalizado(vencedores);
     return;
   }
-  // 🔴 Se já foram sorteados todos os 90 números e ninguém ganhou, finaliza e salva
+
   if (numerosSorteados.length >= 90) {
+    sorteioFinalizado.current = true;
+
     setSorteando(false);
-    await salvarSorteioFinalizado(vencedores);  // ✅ Chama apenas uma vez
-    alert("⚠️ Sorteio finalizado: Nenhum vencedor!");
+    await salvarSorteioFinalizado(vencedores);
     return;
   }
 
-  // 🔥 Gera um novo número único
   let novoNumero;
   do {
     novoNumero = Math.floor(Math.random() * 90) + 1;
   } while (numerosSorteados.includes(novoNumero));
 
-  // Atualiza os estados locais
   setNumeroAtual(novoNumero);
   setNumerosSorteados((prev) => [...prev, novoNumero]);
-//NARRAR NUMERO
-  //narrarNumero(novoNumero); 
 
   try {
-    const sorteioRef = doc(db, "sorteio", "atual");
-    await updateDoc(sorteioRef, {
+    await updateDoc(doc(db, "sorteio", "atual"), {
       numerosSorteados: arrayUnion(novoNumero),
       numeroAtual: novoNumero,
     });
-
-    console.log(`✅ Número ${novoNumero} enviado para Firestore!`);
-
-    // 🔥 Marca número nas cartelas e verifica vencedores
     marcarNumeroNasCartelas(novoNumero);
     verificarVencedores();
   } catch (error) {
-    console.error("❌ Erro ao atualizar Firestore:", error);
+    console.error("Erro ao atualizar Firestore:", error);
   }
 };
+
 
 
   const marcarNumeroNasCartelas = useCallback((numero) => {
@@ -281,79 +292,95 @@ const sortearNumero = async () => {
   }, []);
   
   ///////////////////////////////////////////////
- const verificarVencedores = () => {
-  if (quadraSaiu && quinaSaiu && cartelaCheiaSaiu) return;
+  const verificarVencedores = () => {
+    if (sorteioFinalizado.current) return;
 
-  let vencedorQuadra = null;
-  let vencedorQuina = null;
-  let vencedorCartelaCheia = null;
-
-  cartelas.forEach((cartela) => {
-    const linhas = [
-      cartela.casas.slice(0, 5),
-      cartela.casas.slice(5, 10),
-      cartela.casas.slice(10, 15),
-      cartela.casas.slice(15, 20),
-      cartela.casas.slice(20, 25),
-    ];
-
-    linhas.forEach((linha) => {
-      const marcadosNaLinha = linha.filter((num) => cartela.marcados.includes(num)).length;
-
-      if (!quadraSaiu && marcadosNaLinha === 4 && !vencedorQuadra) {
-        vencedorQuadra = {
-          userName: cartela.userName,
-          tipo: "Quadra",
-          cartelaId: cartela.idNumerico,
-          userId: cartela.userId,
-        };
+  
+    let encontrouQuadra = false;
+    let encontrouQuina = false;
+    let encontrouCartelaCheia = false;
+    const novos = [];
+  
+    for (const cartela of cartelas) {
+      const linhas = [
+        cartela.casas.slice(0, 5),
+        cartela.casas.slice(5, 10),
+        cartela.casas.slice(10, 15),
+        cartela.casas.slice(15, 20),
+        cartela.casas.slice(20, 25),
+      ];
+  
+      for (const linha of linhas) {
+        const marcados = linha.filter((n) => cartela.marcados.includes(n)).length;
+        if (!quadraSaiu && marcados === 4 && !encontrouQuadra) {
+          encontrouQuadra = true;
+          novos.push({ ...info(cartela), tipo: "Quadra" });
+        }
+        if (!quinaSaiu && marcados === 5 && !encontrouQuina) {
+          encontrouQuina = true;
+          novos.push({ ...info(cartela), tipo: "Quina" });
+        }
       }
-
-      if (!quinaSaiu && marcadosNaLinha === 5 && !vencedorQuina) {
-        vencedorQuina = {
-          userName: cartela.userName,
-          tipo: "Quina",
-          cartelaId: cartela.idNumerico,
-          userId: cartela.userId,
-        };
+  
+      if (!cartelaCheiaSaiu && cartela.marcados.length === 25 && !encontrouCartelaCheia) {
+        encontrouCartelaCheia = true;
+        novos.push({ ...info(cartela), tipo: "Cartela Cheia" });
       }
-    });
-
-    if (!cartelaCheiaSaiu && cartela.marcados.length === 25 && !vencedorCartelaCheia) {
-      vencedorCartelaCheia = {
-        userName: cartela.userName,
-        tipo: "Cartela Cheia",
-        cartelaId: cartela.idNumerico,
-        userId: cartela.userId,
-      };
     }
+  
+    if (novos.length > 0) {
+      if (encontrouQuadra) setQuadraSaiu(true);
+      if (encontrouQuina) setQuinaSaiu(true);
+      if (encontrouCartelaCheia) setCartelaCheiaSaiu(true);
+  
+      setVencedores((prev) => [...prev, ...novos]);
+      salvarVitoriaUsuario(novos);
+  
+      if (
+        encontrouQuadra &&
+        encontrouQuina &&
+        encontrouCartelaCheia
+      ) {
+         atualizarStatusExecutadoAgora(); 
+        sorteioFinalizado.current = true;
+        setSorteando(false);
+        salvarSorteioFinalizado([...vencedores, ...novos]);
+      }
+    }
+  };
+  
+  const info = (cartela) => ({
+    userName: cartela.userName,
+    cartelaId: cartela.idNumerico,
+    userId: cartela.userId,
   });
 
-  const novosVencedores = [];
-  if (vencedorQuadra) novosVencedores.push(vencedorQuadra);
-  if (vencedorQuina) novosVencedores.push(vencedorQuina);
-  if (vencedorCartelaCheia) novosVencedores.push(vencedorCartelaCheia);
 
-  if (novosVencedores.length > 0) {
-    setVencedores((prev) => {
-      const listaUnica = new Set([
-        ...prev.map((v) => JSON.stringify(v)),
-        ...novosVencedores.map((v) => JSON.stringify(v)),
-      ]);
-      const listaFinal = [...listaUnica].map((v) => JSON.parse(v));
+  
 
-      // 🔥 Chama aqui dentro para garantir que o estado foi deduplicado
-      salvarVitoriaUsuario(novosVencedores);
-      return listaFinal;
-    });
-
-    // 🔥 Atualiza flags após garantir que o vencedor será tratado
-    if (novosVencedores.some((v) => v.tipo === "Quadra")) setQuadraSaiu(true);
-    if (novosVencedores.some((v) => v.tipo === "Quina")) setQuinaSaiu(true);
-    if (novosVencedores.some((v) => v.tipo === "Cartela Cheia")) setCartelaCheiaSaiu(true);
-  }
-};
-
+  const atualizarStatusExecutadoAgora = async () => {
+    const idReal = localStorage.getItem("idSorteioAgendado");
+  
+    if (!idReal) {
+      console.warn("⚠️ [atualizarStatusExecutadoAgora] ID não encontrado no localStorage.");
+      return;
+    }
+  
+    try {
+      await updateDoc(doc(db, "sorteios_agendados", idReal), {
+        status: "executado"
+      });
+  
+      const agora = new Date().toLocaleTimeString(); // pega a hora no formato local, tipo "14:35:08"
+  
+      console.log(`✅ [atualizarStatusExecutadoAgora] Status 'executado' enviado imediatamente para: ${idReal} às ${agora}`);
+      //alert(`✅ Status 'executado' enviado com sucesso para o sorteio: ${idReal} às ${agora}`);
+  
+    } catch (error) {
+      console.error("🔥 Erro ao atualizar status pra 'executado':", error);
+    }
+  };
+  
  /* const verificarVencedores = () => {
     let novosVencedores = [];
     
@@ -418,21 +445,25 @@ const sortearNumero = async () => {
   };*/
   
 
-
   useEffect(() => {
-    if (!sorteando) return;
+    const sorteioRef = doc(db, "sorteio", "atual");
   
-    console.log("⏳ Iniciando intervalo de sorteio...");
+    const unsubscribe = onSnapshot(sorteioRef, (docSnapshot) => {
+      if (docSnapshot.exists()) {
+        const data = docSnapshot.data();
+        setNumerosSorteados(data.numerosSorteados || []);
+        setNumeroAtual(data.numeroAtual || null);
   
-    intervaloSorteio.current = setInterval(() => {
-      sortearNumero();
-    }, 2000);
+        if (data.numerosSorteados?.length > 0 && !sorteandoRef.current) {
+          setSorteando(true);
+        }
+      }
+    });
   
-    return () => {
-      clearInterval(intervaloSorteio.current);
-      console.log("🧹 Intervalo limpo via cleanup");
-    };
-  }, [sorteando,numerosSorteados]);
+    return () => unsubscribe();
+  }, []);
+  
+  
   /*********************************************/
 
   const narrarNumero = (numero) => {
@@ -500,19 +531,16 @@ const sortearNumero = async () => {
       const idReal = localStorage.getItem("idSorteioAgendado");
       if (idReal) {
         await updateDoc(doc(db, "sorteios_agendados", idReal), {
-          iniciado: false
+           status: "executado"
         });
       }
 
       setTimeout(() => {
         navigate("/Home"); // redireciona para a home após 3 segundos
-      }, 3000);
+      }, 6000);
       
       
       
-
-
-
     } catch (error) {
       console.error("🔥 Erro ao salvar sorteio finalizado:", error);
     }
@@ -773,7 +801,7 @@ const deletarTodasCartelas = async () => {
 
   
 
-  console.log("✅ [Sorteio] Renderizando! Cartelas no contexto:", useContext(UserContext).cartelas);
+ // console.log("✅ [Sorteio] Renderizando! Cartelas no contexto:", useContext(UserContext).cartelas);
 
 
   return (
@@ -847,4 +875,4 @@ const deletarTodasCartelas = async () => {
   );
 };
 
-export default Sorteio;
+export default Sorteio;  

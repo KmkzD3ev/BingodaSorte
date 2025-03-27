@@ -55,41 +55,63 @@ const NavBar = () => {
     const interval = setInterval(verificarSorteioDisponivel, 5000);
     return () => clearInterval(interval);
   }, [navigate]);
+
   useEffect(() => {
-    if (!sorteioIdMonitorado) return;
-  
-    let iniciadoAnterior = null;
-  
-    const verificarIniciado = async () => {
+    const verificarLiberacaoSorteio = async () => {
       try {
-        const docRef = doc(db, "sorteios_agendados", sorteioIdMonitorado);
-        const docSnap = await getDoc(docRef);
+        const sorteiosRef = collection(db, "sorteios_agendados");
+        const q = query(sorteiosRef, where("status", "==", "pendente"));
+        const snapshot = await getDocs(q);
   
-        if (!docSnap.exists()) {
-          console.warn("❌ Sorteio não encontrado.");
+        if (snapshot.empty) {
+          setSorteioIniciado(false);
           return;
         }
   
-        const data = docSnap.data();
-        setSorteioIniciado(data.iniciado);
+        const agora = new Date();
+        let liberado = false;
   
-        if (data.iniciado !== iniciadoAnterior) {
-          iniciadoAnterior = data.iniciado;
+        for (const docSnap of snapshot.docs) {
+          const data = docSnap.data();
+          const [h, m] = data.hora.split(":").map(Number);
+          const horarioSorteio = new Date();
+          horarioSorteio.setHours(h, m, 0, 0);
   
-          toast.info(
-            `📡 Sorteio ${sorteioIdMonitorado} ${data.iniciado ? "INICIADO" : "ENCERRADO"}`,
-            { autoClose: 3000 }
-          );
+          const diffMin = (agora - horarioSorteio) / 60000;
+  
+          if (diffMin >= 0 && diffMin <= 3) {
+            setSorteioIniciado(true); // ✅ Libera
+            setSorteioIdMonitorado(docSnap.id);
+            liberado = true;
+            break;
+          } else if (diffMin > 3) {
+            const ref = doc(db, "sorteios_agendados", docSnap.id);
+            const docAtual = await getDoc(ref);
+            const status = docAtual.data().status;
+  
+            if (status === "executado") {
+              setSorteioIniciado(false); // ❌ Bloqueia
+              liberado = true;
+              break;
+            }
+          }
         }
+  
+        if (!liberado) {
+          setSorteioIniciado(false); // 🔒 Nada válido encontrado
+        }
+  
       } catch (err) {
-        console.error("❌ Erro ao monitorar sorteio:", err);
+        console.error("❌ Erro ao verificar liberação do sorteio:", err);
+        setSorteioIniciado(false);
       }
     };
   
-    verificarIniciado();
-    const interval = setInterval(verificarIniciado, 60000); // A cada 1 minuto
+    verificarLiberacaoSorteio();
+    const interval = setInterval(verificarLiberacaoSorteio, 5000);
     return () => clearInterval(interval);
-  }, [sorteioIdMonitorado]);
+  }, []);
+  
   
   const handleLogout = async () => {
     try {

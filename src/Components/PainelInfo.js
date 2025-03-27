@@ -96,22 +96,19 @@ const PainelInfo = ({ mostrarCartelas = true }) => {
       {/* 🔥 Apenas essa parte será removida se mostrarCartelas=false */}
       {mostrarCartelas && (
         <div className="painel-conteudo">
-          {console.log("Cartelas carregadas no PainelInfo:", cartelas)}
+        
           
           <div className="cartelas-container">
             {cartelas.length > 0 ? (
               cartelas.map((cartela, index) => {
-                console.log(`Cartela ${index} - Números:`, cartela.casas);
+                
 
                 if (!cartela.casas || !Array.isArray(cartela.casas) || cartela.casas.length !== 25) {
                   console.error(`❌ ERRO NA CARTELA ${index}:`, cartela);
                   return <p key={cartela.idCartela}>❌ Erro na cartela {cartela.idCartela}</p>;
                 }
 
-                console.log(
-                  `📌 Enviando para CartelaBingo (ID: ${cartela.idCartela}):`,
-                  formatarParaMatriz(cartela.casas)
-                );
+              
 
                 return (
                   <CartelaBingo 
