@@ -40,6 +40,8 @@ const Sorteio = () => {
   const navigate = useNavigate();
   const [mensagemInicial, setMensagemInicial] = useState(true);
   const acumuladoPago = useRef(false);
+  const intervaloSorteio = useRef(null);
+
   
   
 
@@ -219,12 +221,16 @@ const sortearNumero = async () => {
 
   // 🔴 Se os três prêmios saíram, finaliza o sorteio e salva
   if (quadraSaiu && quinaSaiu && cartelaCheiaSaiu) {
+    console.log("🏁 Encerrando sorteio no sortearNumero");
+
+    // ⛔ PARA IMEDIATAMENTE
+    clearInterval(intervaloSorteio.current);
+    console.log("🛑 Intervalo encerrado manualmente");
+
     setSorteando(false);
-    await salvarSorteioFinalizado(vencedores);  // ✅ Chama apenas uma vez
-    alert("✅ Sorteio finalizado!");
+    await salvarSorteioFinalizado(vencedores);
     return;
   }
-
   // 🔴 Se já foram sorteados todos os 90 números e ninguém ganhou, finaliza e salva
   if (numerosSorteados.length >= 90) {
     setSorteando(false);
@@ -414,15 +420,19 @@ const sortearNumero = async () => {
 
 
   useEffect(() => {
-    let interval;
-    if (sorteando) {
-      interval = setInterval(() => {
-        sortearNumero();
-      }, 2000);
-    }
-    return () => clearInterval(interval);
-  }, [sorteando, numerosSorteados]);
-
+    if (!sorteando) return;
+  
+    console.log("⏳ Iniciando intervalo de sorteio...");
+  
+    intervaloSorteio.current = setInterval(() => {
+      sortearNumero();
+    }, 2000);
+  
+    return () => {
+      clearInterval(intervaloSorteio.current);
+      console.log("🧹 Intervalo limpo via cleanup");
+    };
+  }, [sorteando,numerosSorteados]);
   /*********************************************/
 
   const narrarNumero = (numero) => {
