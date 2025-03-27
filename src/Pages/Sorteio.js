@@ -205,6 +205,35 @@ useEffect(() => {
 
     recuperarCartelas();
   }, []);
+  /////////////////////////////////////////////////////////////
+  useEffect(() => {
+    if (!loading && numerosSorteados.length > 0 && cartelas.length > 0) {
+      console.log("🔄 [SYNC] Reprocessando cartelas e prêmios...");
+      
+      numerosSorteados.forEach((numero) => {
+        marcarNumeroNasCartelas(numero);
+      });
+  
+      verificarVencedores();
+    }
+  }, [loading, numerosSorteados, cartelas]);
+  ////////////////////////////////////////////////
+
+  useEffect(() => {
+    const unsubscribe = onSnapshot(doc(db, "sorteio", "atual"), (docSnapshot) => {
+      if (docSnapshot.exists()) {
+        const data = docSnapshot.data();
+        if (data.finalizado) {
+          console.log("🚪 Sorteio finalizado detectado! Redirecionando...");
+          navigate("/Home");
+        }
+      }
+    });
+  
+    return () => unsubscribe();
+  }, []);
+  
+  
 
 
   //////////////////////////////////////////////////////////////////////
@@ -451,6 +480,16 @@ const sortearNumero = async () => {
     const unsubscribe = onSnapshot(sorteioRef, (docSnapshot) => {
       if (docSnapshot.exists()) {
         const data = docSnapshot.data();
+
+        if (data.finalizado && !sorteioFinalizado.current) {
+          console.log("⚠️ Sorteio já finalizado, redirecionando...");
+          sorteioFinalizado.current = true;
+          navigate("/Home");
+          return;
+        }
+
+
+
         setNumerosSorteados(data.numerosSorteados || []);
         setNumeroAtual(data.numeroAtual || null);
   
@@ -521,10 +560,16 @@ const sortearNumero = async () => {
           cartela: v.cartelaId,
           tipo: v.tipo,
         })),
+        
        
       });
   
       console.log("✅ Sorteio finalizado salvo no Firebase:",sorteioIdGlobal );
+      await updateDoc(doc(db, "sorteio", "atual"), {
+        finalizado: true,
+      });
+      
+      
 
       await resetarSorteio();
       await deletarTodasCartelas();
