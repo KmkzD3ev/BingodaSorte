@@ -30,21 +30,24 @@ const SorteioPainel = () => {
         const q = query(sorteiosRef, where("status", "==", "pendente"));
         const snapshot = await getDocs(q);
 
-        let horario = null;
-        snapshot.forEach((doc) => {
-          const data = doc.data();
-          if (data.hora) {
-            horario = data.hora;
-            console.log("🎯 Horário do sorteio encontrado:", horario);
-          }
+        let sorteiosPendentes = snapshot.docs
+        .map(doc => ({ id: doc.id, ...doc.data() }))
+        .filter(s => s.hora) // garante que tem hora
+        .sort((a, b) => {
+          const [h1, m1] = a.hora.split(":").map(Number);
+          const [h2, m2] = b.hora.split(":").map(Number);
+          return h1 !== h2 ? h1 - h2 : m1 - m2;
         });
-
-        if (horario) {
-          setHoraAgendada(horario);
-          iniciarContagemRegressiva(horario);
-        } else {
-          console.warn("⚠️ Nenhum horário pendente encontrado.");
-        }
+      
+      if (sorteiosPendentes.length > 0) {
+        const maisCedo = sorteiosPendentes[0];
+        console.log("🎯 Sorteio mais cedo encontrado:", maisCedo.hora);
+        setHoraAgendada(maisCedo.hora);
+        iniciarContagemRegressiva(maisCedo.hora);
+      } else {
+        console.warn("⚠️ Nenhum horário pendente encontrado.");
+      }
+      
 
       } catch (e) {
         console.error("❌ Erro ao buscar dados:", e);

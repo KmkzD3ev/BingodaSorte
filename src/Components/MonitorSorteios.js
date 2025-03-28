@@ -34,6 +34,7 @@ const MonitorSorteios = () => {
             console.log("✅ Sorteio correspondente encontrado! Hora:", dados.hora);
             sorteioEncontrado = { id: doc.id, ...dados };
             localStorage.setItem("idSorteioAgendado", doc.id); 
+            console.log(`📝 Salvando ID no localStorage: "${doc.id}"`);
           }
         });
 

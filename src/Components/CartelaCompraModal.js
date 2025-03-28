@@ -58,6 +58,11 @@ const CartelaCompraModal = ({ sorteioId, onClose }) => {
           idSorteioAgendado: sorteioId,
         };
         await addCartela(novaCartela);
+        console.log(`✅ Cartela salva com sucesso:`, {
+          idNumerico: novaCartela.idNumerico,
+          userId: user.uid,
+          idSorteioAgendado: novaCartela.idSorteioAgendado || "AVULSA"
+        });
       }
 
       alert(`Compra de ${quantidade} cartela(s) realizada com sucesso!`);

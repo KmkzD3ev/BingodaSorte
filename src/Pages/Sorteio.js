@@ -159,81 +159,64 @@ useEffect(() => {
 
   
 
-  useEffect(() => {
-    const recuperarCartelas = async () => {
-      try {
-        console.log("🔄 Buscando TODAS as cartelas...");
+useEffect(() => {
+  const recuperarCartelas = async () => {
+    try {
+      console.log("🔄 Buscando cartelas avulsas e vinculadas ao sorteio atual...");
 
-        // 🔥 Buscar todas as cartelas na coleção 'userCartelas'
-        const cartelasSnapshot = await getDocs(collectionGroup(db, "userCartelas"));
+      const idSorteioAtual = localStorage.getItem("idSorteioAgendado");
+      const snapshot = await getDocs(collectionGroup(db, "userCartelas"));
 
-        if (cartelasSnapshot.empty) {
-          console.warn("⚠️ Nenhuma cartela encontrada.");
-          setLoading(false);
-          return;
-        }
-
-        console.log(`✅ ${cartelasSnapshot.docs.length} cartelas encontradas.`);
-
-        const todasCartelas = cartelasSnapshot.docs
-        .map((doc) => {
-          const data = doc.data();
-          return {
-            id: doc.id,
-            idNumerico: data.idNumerico || "SEM ID",
-            userId: doc.ref.parent.parent.id,
-            casas: Array.isArray(data.casas) ? data.casas : [],
-            marcados: [],
-          };
-        })
-        .filter((cartela) => cartela.id !== "init" && cartela.idNumerico !== "init"); // 🔥 Filtra documentos inválidos
-      
-
-        console.log("📌 TODAS AS CARTELAS RECUPERADAS:", todasCartelas);
-        setCartelas(todasCartelas);
-
-        recuperarNomesUsuarios(todasCartelas);
-        
-
-        console.log("📌 Todas as cartelas recuperadas:", todasCartelas);
-        setCartelas(todasCartelas);
-      } catch (error) {
-        console.error("🔥 Erro ao recuperar cartelas:", error);
+      if (snapshot.empty) {
+        console.warn("⚠️ Nenhuma cartela encontrada.");
+        setLoading(false);
+        return;
       }
-      setLoading(false);
-    };
 
-    recuperarCartelas();
-  }, []);
-  /////////////////////////////////////////////////////////////
-  useEffect(() => {
-    if (!loading && numerosSorteados.length > 0 && cartelas.length > 0) {
-      console.log("🔄 [SYNC] Reprocessando cartelas e prêmios...");
+      const cartelasTodas = snapshot.docs.map((doc, index) => {
+        const data = doc.data();
+        const cartela = {
+          id: doc.id,
+          idNumerico: data.idNumerico || "SEM ID",
+          userId: doc.ref.parent.parent.id,
+          casas: Array.isArray(data.casas) ? data.casas : [],
+          marcados: [],
+          idSorteioAgendado: data.idSorteioAgendado || null,
+        };
       
-      numerosSorteados.forEach((numero) => {
-        marcarNumeroNasCartelas(numero);
-      });
-  
-      verificarVencedores();
+        console.log(`📋 Cartela [${index + 1}]:`, {
+          id: cartela.id,
+          idNumerico: cartela.idNumerico,
+          userId: cartela.userId,
+          idSorteioAgendado: cartela.idSorteioAgendado,
+        });
+      
+        return cartela;
+      }).filter(cartela =>
+        cartela.id !== "init" && cartela.idNumerico !== "init"
+      );
+      
+      const cartelasAvulsas = cartelasTodas.filter(c => c.idSorteioAgendado === null);
+      const cartelasVinculadas = cartelasTodas.filter(c => c.idSorteioAgendado === idSorteioAtual);
+
+      const cartelasFiltradas = [...cartelasAvulsas, ...cartelasVinculadas];
+
+      console.log(`📦 Total de cartelas encontradas: ${cartelasTodas.length}`);
+      console.log(`🟢 Cartelas AVULSAS: ${cartelasAvulsas.length}`);
+      console.log(`🔵 Cartelas VINCULADAS ao sorteio atual (${idSorteioAtual}): ${cartelasVinculadas.length}`);
+      console.log("📌 Cartelas selecionadas para uso:", cartelasFiltradas);
+
+      setCartelas(cartelasFiltradas);
+      recuperarNomesUsuarios(cartelasFiltradas);
+    } catch (error) {
+      console.error("🔥 Erro ao recuperar cartelas:", error);
     }
-  }, [loading, numerosSorteados, cartelas]);
-  ////////////////////////////////////////////////
+    setLoading(false);
+  };
 
-  useEffect(() => {
-    const unsubscribe = onSnapshot(doc(db, "sorteio", "atual"), (docSnapshot) => {
-      if (docSnapshot.exists()) {
-        const data = docSnapshot.data();
-        if (data.finalizado) {
-          console.log("🚪 Sorteio finalizado detectado! Redirecionando...");
-          navigate("/Home");
-        }
-      }
-    });
-  
-    return () => unsubscribe();
-  }, []);
-  
-  
+  recuperarCartelas();
+}, []);
+
 
 
   //////////////////////////////////////////////////////////////////////
@@ -480,16 +463,6 @@ const sortearNumero = async () => {
     const unsubscribe = onSnapshot(sorteioRef, (docSnapshot) => {
       if (docSnapshot.exists()) {
         const data = docSnapshot.data();
-
-        if (data.finalizado && !sorteioFinalizado.current) {
-          console.log("⚠️ Sorteio já finalizado, redirecionando...");
-          sorteioFinalizado.current = true;
-          navigate("/Home");
-          return;
-        }
-
-
-
         setNumerosSorteados(data.numerosSorteados || []);
         setNumeroAtual(data.numeroAtual || null);
   
@@ -560,16 +533,10 @@ const sortearNumero = async () => {
           cartela: v.cartelaId,
           tipo: v.tipo,
         })),
-        
        
       });
   
       console.log("✅ Sorteio finalizado salvo no Firebase:",sorteioIdGlobal );
-      await updateDoc(doc(db, "sorteio", "atual"), {
-        finalizado: true,
-      });
-      
-      
 
       await resetarSorteio();
       await deletarTodasCartelas();
@@ -821,27 +788,38 @@ const resetarSorteio = async () => {
     alert("Erro ao resetar sorteio. Verifique o console.");
   }
 };
+
 const deletarTodasCartelas = async () => {
   console.log("🧪 [DEBUG] deletarTodasCartelas foi chamada");
 
   try {
     const snapshot = await getDocs(collectionGroup(db, "userCartelas"));
+    const idSorteioFinalizado = localStorage.getItem("idSorteioAgendado");
 
     if (snapshot.empty) {
       console.log("📭 Nenhuma cartela encontrada na subcoleção 'userCartelas'.");
       return;
     }
 
-    const deletarCartelas = snapshot.docs.map((doc) => deleteDoc(doc.ref));
+    const cartelasParaExcluir = snapshot.docs.filter((doc) => {
+      const data = doc.data();
+      const idSorteio = data.idSorteioAgendado || null;
+
+      // Só apaga se for avulsa (null) ou do sorteio que acabou
+      return idSorteio === null || idSorteio === idSorteioFinalizado;
+    });
+
+    console.log(`🧹 Total a excluir: ${cartelasParaExcluir.length}`);
+    console.log(`🟢 Avulsas + 🔵 do sorteio finalizado (${idSorteioFinalizado})`);
+
+    const deletarCartelas = cartelasParaExcluir.map((doc) => deleteDoc(doc.ref));
     await Promise.all(deletarCartelas);
 
-    console.log("🧹 Todas as cartelas da subcoleção 'userCartelas' foram deletadas!");
+    console.log("✅ Cartelas deletadas com sucesso.");
   } catch (error) {
     console.error("🔥 Erro ao deletar cartelas:", error);
   }
 };
-
-
 
 
   
