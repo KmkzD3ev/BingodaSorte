@@ -224,6 +224,65 @@ useEffect(() => {
 
   return () => clearTimeout(timeout);
 }, []);
+////////////////////////////////////////////////////////////////////////
+
+// 🔁 [SYNC INICIAL] Executa apenas para quem entrou após o início do sorteio
+useEffect(() => {
+  const syncSeUsuarioEntrouDepois = async () => {
+    try {
+      const docRef = doc(db, "sorteio", "atual");
+      const docSnap = await getDoc(docRef);
+
+      if (!docSnap.exists()) return;
+
+      const data = docSnap.data();
+      const jaComecou = Array.isArray(data.numerosSorteados) && data.numerosSorteados.length > 0;
+
+      if (jaComecou) {
+        console.log("📌 Novo usuário detectado após início do sorteio. Sincronizando estado completo...");
+
+        setNumerosSorteados(data.numerosSorteados || []);
+        setNumeroAtual(data.numeroAtual || null);
+        setSorteando(true);
+
+        marcarNumeroNasCartelasEmMassa(data.numerosSorteados || []);
+        verificarVencedores();
+
+        // 🔥 NOVO: Verifica se o sorteio já foi finalizado
+        const idReal = localStorage.getItem("idSorteioAgendado");
+        if (idReal) {
+          const sorteioAgendadoRef = doc(db, "sorteios_agendados", idReal);
+          const sorteioAgendadoSnap = await getDoc(sorteioAgendadoRef);
+
+          if (sorteioAgendadoSnap.exists() && sorteioAgendadoSnap.data().status === "executado") {
+            console.log("✅ Sorteio já foi finalizado. Buscando vencedores...");
+
+            // 🔍 Busca o resultado final
+            const finalizadosSnap = await getDocs(collection(db, "Sorteios Finalizados"));
+            finalizadosSnap.forEach((doc) => {
+              const sorteioData = doc.data();
+              if (sorteioData.sorteioId === idReal || sorteioData.sorteioId === sorteioIdGlobal) {
+                setVencedores(sorteioData.vencedores || []);
+                console.log("🏆 Vencedores carregados do Firestore:", sorteioData.vencedores);
+              }
+            });
+
+            // ⏳ Redireciona o usuário depois de uns segundos
+            setTimeout(() => {
+              navigate("/Home");
+            }, 5000);
+          }
+        }
+      }
+    } catch (err) {
+      console.error("❌ Erro ao sincronizar usuário novo:", err);
+    }
+  };
+
+  syncSeUsuarioEntrouDepois();
+}, []);
+
+
 
   //////////////////////////////////////////////////////////////////////
   const obterIdSorteioDoLocalStorage = () => {
@@ -263,6 +322,13 @@ const recuperarNomesUsuarios = async (cartelas) => {
 
     console.log("📌 Cartelas ATUALIZADAS com nomes:", cartelasComNomes);
     setCartelas(cartelasComNomes);
+
+    // 🔁 Se já existem números sorteados, reexecuta a marcação e verificação com cartelas atualizadas
+if (numerosSorteados.length > 0) {
+  marcarNumeroNasCartelasEmMassa(numerosSorteados);
+  verificarVencedores();
+}
+
     
   } catch (error) {
     console.error("🔥 Erro ao recuperar nomes dos usuários:", error);
@@ -538,11 +604,16 @@ const sortearNumero = async () => {
 
   /***************************************************/
   const salvarSorteioFinalizado = async (vencedores) => {
-    if (vencedores.length === 0) return; // 🔥 Não salva se não houver vencedores
+    if (vencedores.length === 0) return;
+  
+    if (sorteioFinalizado.current) {
+      console.warn("⛔ Sorteio já foi finalizado. Ignorando chamada duplicada.");
+      return;
+    }
+  
+    sorteioFinalizado.current = true; // 🔒 BLOQUEIO imediato
   
     try {
-      
-  
       await addDoc(collection(db, "Sorteios Finalizados"), {
         sorteioId: sorteioIdGlobal,
         data: dataSorteioGlobal,
@@ -551,32 +622,29 @@ const sortearNumero = async () => {
           cartela: v.cartelaId,
           tipo: v.tipo,
         })),
-       
       });
   
-      console.log("✅ Sorteio finalizado salvo no Firebase:",sorteioIdGlobal );
-
-   
+      console.log("✅ Sorteio finalizado salvo no Firebase:", sorteioIdGlobal);
+  
       await resetarSorteio();
       await deletarTodasCartelas();
+  
       const idReal = localStorage.getItem("idSorteioAgendado");
       if (idReal) {
         await updateDoc(doc(db, "sorteios_agendados", idReal), {
-           status: "executado"
+          status: "executado"
         });
       }
-
+  
       setTimeout(() => {
-        navigate("/Home"); // redireciona para a home após 3 segundos
+        navigate("/Home");
       }, 6000);
-      
-      
-      
+  
     } catch (error) {
       console.error("🔥 Erro ao salvar sorteio finalizado:", error);
     }
   };
-
+  
   /////////////////////////////////////
   const gerarCorAleatoria = () => {
     const letras = "0123456789ABCDEF";
@@ -842,6 +910,22 @@ const deletarTodasCartelas = async () => {
     console.error("🔥 Erro ao deletar cartelas:", error);
   }
 };
+
+const marcarNumeroNasCartelasEmMassa = (numeros) => {
+  setCartelas((cartelasAnteriores) =>
+    cartelasAnteriores.map((cartela) => {
+      const novosMarcados = cartela.casas.filter((numero) =>
+        numeros.includes(numero)
+      );
+      return {
+        ...cartela,
+        marcados: novosMarcados,
+      };
+    })
+  );
+};
+
+
 
 
   
