@@ -157,14 +157,21 @@ useEffect(() => {
 }, [numeroAtual, numerosSorteados, quadraSaiu, quinaSaiu, cartelaCheiaSaiu]);
 
 
-  
 
+
+  
 useEffect(() => {
-  const recuperarCartelas = async () => {
+  const timeout = setTimeout(async () => {
+    
+    const idSorteioAtual = obterIdSorteioDoLocalStorage();
+    if (!idSorteioAtual) {
+      console.error("⚠️ Nenhum ID de sorteio encontrado no localStorage.");
+      setLoading(false);
+      return;  // Se não encontrar o ID, sai da execução
+    }
     try {
       console.log("🔄 Buscando cartelas avulsas e vinculadas ao sorteio atual...");
 
-      const idSorteioAtual = localStorage.getItem("idSorteioAgendado");
       const snapshot = await getDocs(collectionGroup(db, "userCartelas"));
 
       if (snapshot.empty) {
@@ -183,19 +190,19 @@ useEffect(() => {
           marcados: [],
           idSorteioAgendado: data.idSorteioAgendado || null,
         };
-      
+
         console.log(`📋 Cartela [${index + 1}]:`, {
           id: cartela.id,
           idNumerico: cartela.idNumerico,
           userId: cartela.userId,
           idSorteioAgendado: cartela.idSorteioAgendado,
         });
-      
+
         return cartela;
       }).filter(cartela =>
         cartela.id !== "init" && cartela.idNumerico !== "init"
       );
-      
+
       const cartelasAvulsas = cartelasTodas.filter(c => c.idSorteioAgendado === null);
       const cartelasVinculadas = cartelasTodas.filter(c => c.idSorteioAgendado === idSorteioAtual);
 
@@ -211,15 +218,26 @@ useEffect(() => {
     } catch (error) {
       console.error("🔥 Erro ao recuperar cartelas:", error);
     }
-    setLoading(false);
-  };
 
-  recuperarCartelas();
+    setLoading(false);
+  }, 8000); // ⏱️ Delay de 8 segundos
+
+  return () => clearTimeout(timeout);
 }, []);
 
-
-
   //////////////////////////////////////////////////////////////////////
+  const obterIdSorteioDoLocalStorage = () => {
+    const idSorteio = localStorage.getItem("idSorteioAgendado");
+  
+    if (!idSorteio) {
+      console.error("⚠️ Nenhum ID de sorteio encontrado no localStorage.");
+      return null;
+    }
+  
+    console.log("✅ ID de sorteio encontrado:", idSorteio);
+    return idSorteio;
+  };
+//////////////////////////////////////////////////  
 
 const recuperarNomesUsuarios = async (cartelas) => {
   try {
@@ -538,6 +556,7 @@ const sortearNumero = async () => {
   
       console.log("✅ Sorteio finalizado salvo no Firebase:",sorteioIdGlobal );
 
+   
       await resetarSorteio();
       await deletarTodasCartelas();
       const idReal = localStorage.getItem("idSorteioAgendado");
@@ -814,6 +833,9 @@ const deletarTodasCartelas = async () => {
 
     const deletarCartelas = cartelasParaExcluir.map((doc) => deleteDoc(doc.ref));
     await Promise.all(deletarCartelas);
+    localStorage.removeItem("idSorteioAgendado");
+    console.log("🧹 ID do sorteio removido do localStorage:", localStorage.getItem("idSorteioAgendado")); 
+
 
     console.log("✅ Cartelas deletadas com sucesso.");
   } catch (error) {
@@ -898,4 +920,4 @@ const deletarTodasCartelas = async () => {
   );
 };
 
-export default Sorteio;  
+export default Sorteio; 
