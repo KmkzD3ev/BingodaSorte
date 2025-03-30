@@ -142,6 +142,7 @@ useEffect(() => {
   console.log("🟣 Novo número recebido do backend:", numeroAtual);
 
   marcarNumeroNasCartelas(numeroAtual);
+  narrarNumero(numeroAtual)
 
   // Aguardar pequeno delay antes de verificar vencedores
   setTimeout(() => {
