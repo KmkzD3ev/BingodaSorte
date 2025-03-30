@@ -132,8 +132,8 @@ const SorteioPainel = () => {
         </div>
         <div className="linha"></div>
         <div className="info">
-          <p>DOAÇÃO</p>
-          <span className="destaque">R$ 0,15</span>
+        <p>DOAÇÃO</p>
+        <span className="destaque">R$ {sorteioData.doacao}</span>
         </div>
         <div className="linha"></div>
         <div className="info">

@@ -1,29 +1,57 @@
 import React, { useState, useEffect } from "react";
 import { db } from "../services/firebaseconection";  
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, collection, query, where, getDocs } from "firebase/firestore";
 import "./CardsSorteio.css"; // 🔥 Importa o CSS dos cards
 
 const CardsSorteio = () => {
   const [dadosSorteio, setDadosSorteio] = useState(null);
+  const [horaAgendada, setHoraAgendada] = useState("00:00");
+  const dataAtual = new Date().toLocaleDateString("pt-BR"); // 🔥 Ex: 29/03/2025
+
+
 
   useEffect(() => {
     const buscarDadosSorteio = async () => {
       try {
         const docRef = doc(db, "config", "dadosSorteio");
         const docSnap = await getDoc(docRef);
-
+  
         if (docSnap.exists()) {
           setDadosSorteio(docSnap.data());
         } else {
           console.log("❌ Nenhum dado encontrado no Firestore.");
         }
+  
+        // 🔥 Agora busca o próximo sorteio pendente
+        const sorteiosRef = collection(db, "sorteios_agendados");
+        const q = query(sorteiosRef, where("status", "==", "pendente"));
+        const snapshot = await getDocs(q);
+  
+        let sorteiosPendentes = snapshot.docs
+          .map(doc => ({ id: doc.id, ...doc.data() }))
+          .filter(s => s.hora) // só se tiver campo "hora"
+          .sort((a, b) => {
+            const [h1, m1] = a.hora.split(":").map(Number);
+            const [h2, m2] = b.hora.split(":").map(Number);
+            return h1 !== h2 ? h1 - h2 : m1 - m2;
+          });
+  
+        if (sorteiosPendentes.length > 0) {
+          const maisCedo = sorteiosPendentes[0];
+          setHoraAgendada(maisCedo.hora);
+          console.log("🕒 Próximo sorteio agendado às:", maisCedo.hora);
+        } else {
+          console.warn("⚠️ Nenhum sorteio agendado encontrado.");
+        }
+  
       } catch (error) {
-        console.error("❌ Erro ao buscar dados do sorteio:", error);
+        console.error("❌ Erro ao buscar dados:", error);
       }
     };
-
+  
     buscarDadosSorteio();
   }, []);
+  
 
   if (!dadosSorteio) {
     return <p>🔄 Carregando informações do sorteio...</p>;
@@ -63,14 +91,15 @@ const CardsSorteio = () => {
         </div>
 
         <div className="card">
-          <h3>DATA</h3>
-          <span className="valor">26/02/2025</span>
-        </div>
+  <h3>DATA</h3>
+  <span className="valor">{dataAtual}</span>
+</div>
 
         <div className="card">
-          <h3>HORA</h3>
-          <span className="valor">17:30</span>
-        </div>
+  <h3>HORA</h3>
+  <span className="valor">{horaAgendada}</span>
+</div>
+
       </div>
       
     </div>

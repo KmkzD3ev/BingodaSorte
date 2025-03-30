@@ -33,6 +33,9 @@ const Sorteio = () => {
   const [cartelas, setCartelas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [vencedores, setVencedores] = useState([]);
+  const [mensagemInicialJaExibida, setMensagemInicialJaExibida] = useState(false);
+
+
 
   const [quadraSaiu, setQuadraSaiu] = useState(false);
   const [quinaSaiu, setQuinaSaiu] = useState(false);
@@ -116,8 +119,9 @@ useEffect(() => {
   }, [iniciarSorteioExterno]);*/
 
   useEffect(() => {
-    if (iniciarSorteioExterno) {
+    if (iniciarSorteioExterno && !mensagemInicialJaExibida) {
       setMensagemInicial(true);
+      setMensagemInicialJaExibida(true); // 🔒 Marcar como já exibida
       setSorteando(false); // evita início prematuro
   
       setTimeout(() => {
@@ -138,7 +142,12 @@ useEffect(() => {
   console.log("🟣 Novo número recebido do backend:", numeroAtual);
 
   marcarNumeroNasCartelas(numeroAtual);
-  verificarVencedores();
+
+  // Aguardar pequeno delay antes de verificar vencedores
+  setTimeout(() => {
+    verificarVencedores();
+  }, 100); // 100ms é suficiente
+  
 
   if (quadraSaiu && quinaSaiu && cartelaCheiaSaiu) {
     console.log("✅ Todos prêmios saíram. Finalizando sorteio...");
@@ -388,7 +397,8 @@ const sortearNumero = async () => {
   }, []);
   
   ///////////////////////////////////////////////
-  const verificarVencedores = () => {
+  const verificarVencedores = async () => {
+
     if (sorteioFinalizado.current) return;
 
   
@@ -399,12 +409,14 @@ const sortearNumero = async () => {
   
     for (const cartela of cartelas) {
       const linhas = [
-        cartela.casas.slice(0, 5),
-        cartela.casas.slice(5, 10),
-        cartela.casas.slice(10, 15),
-        cartela.casas.slice(15, 20),
-        cartela.casas.slice(20, 25),
+        [cartela.casas[0], cartela.casas[5], cartela.casas[10], cartela.casas[15], cartela.casas[20]],
+        [cartela.casas[1], cartela.casas[6], cartela.casas[11], cartela.casas[16], cartela.casas[21]],
+        [cartela.casas[2], cartela.casas[7], cartela.casas[12], cartela.casas[17], cartela.casas[22]],
+        [cartela.casas[3], cartela.casas[8], cartela.casas[13], cartela.casas[18], cartela.casas[23]],
+        [cartela.casas[4], cartela.casas[9], cartela.casas[14], cartela.casas[19], cartela.casas[24]],
       ];
+      
+  
   
       for (const linha of linhas) {
         const marcados = linha.filter((n) => cartela.marcados.includes(n)).length;
@@ -425,19 +437,47 @@ const sortearNumero = async () => {
     }
   
     if (novos.length > 0) {
+
+      const filtrados = [];
+
+      if (encontrouQuadra) {
+        const primeiroQuadra = novos.find(
+          (n) => n.tipo === "Quadra" && !vencedores.some(v => v.tipo === "Quadra" && v.cartelaId === n.cartelaId)
+        );
+        if (primeiroQuadra) filtrados.push(primeiroQuadra);
+      }
+      
+      if (encontrouQuina) {
+        const primeiroQuina = novos.find(
+          (n) => n.tipo === "Quina" && !vencedores.some(v => v.tipo === "Quina" && v.cartelaId === n.cartelaId)
+        );
+        if (primeiroQuina) filtrados.push(primeiroQuina);
+      }
+      
+      if (encontrouCartelaCheia) {
+        const primeiroCheia = novos.find(
+          (n) => n.tipo === "Cartela Cheia" && !vencedores.some(v => v.tipo === "Cartela Cheia" && v.cartelaId === n.cartelaId)
+        );
+        if (primeiroCheia) filtrados.push(primeiroCheia);
+      }
+      
+
+setVencedores((prev) => [...prev, ...filtrados]);
+salvarVitoriaUsuario(filtrados);
+
       if (encontrouQuadra) setQuadraSaiu(true);
       if (encontrouQuina) setQuinaSaiu(true);
       if (encontrouCartelaCheia) setCartelaCheiaSaiu(true);
   
-      setVencedores((prev) => [...prev, ...novos]);
-      salvarVitoriaUsuario(novos);
+    //  setVencedores((prev) => [...prev, ...novos]);
+      //salvarVitoriaUsuario(novos);
   
       if (
         encontrouQuadra &&
         encontrouQuina &&
         encontrouCartelaCheia
       ) {
-         atualizarStatusExecutadoAgora(); 
+        await atualizarStatusExecutadoAgora(); 
         sorteioFinalizado.current = true;
         setSorteando(false);
         salvarSorteioFinalizado([...vencedores, ...novos]);
