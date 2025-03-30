@@ -267,8 +267,9 @@ if (uid) {
         const dadosIndicador = indicadorSnap.data();
         const ganhosAtuais = dadosIndicador.ganhosPorIndicacao || 0;
 
-        const comissao = valorPagoReais * 0.10; // 🔥 10% de comissão
+        const comissao = 10.00; // 💸 Comissão fixa de R$10
         const novoTotal = ganhosAtuais + comissao;
+        
 
         await updateDoc(indicadorRef, {
           ganhosPorIndicacao: novoTotal,
@@ -283,7 +284,10 @@ if (uid) {
           ]
         });
 
-        console.log(`💰 Comissão de R$${comissao.toFixed(2)} adicionada ao indicador.`);
+       
+console.log(`💰 Comissão fixa de R$${comissao.toFixed(2)} adicionada ao indicador.`);
+alert(`🎉 Comissão de R$${comissao.toFixed(2)} enviada para o afiliado!`);
+
       }
     }
 
